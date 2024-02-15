@@ -1,19 +1,29 @@
 ## User Stories: 
-Ashley is a student. She wants one place to access toxicity information. She 
-needs the information to be easily accessible and reliable. Ashley needs it to 
-be quick. Ashley doesn’t know how to ask the questions (i.e., prompt 
-engineering). 
+Ashley is a student. She wants one place to access the LD50 value of chlorobenzene.
+She needs the information to be easily accessible and reliable. Ashley needs it to 
+be quick. Ashley is familiar with machine learning, but is unsure does not have any 
+previous knowledge on toxiicity. She doesn’t know how to ask the questions (i.e., prompt engineering). 
 
-Joe is a professor. Dave wants to check the safety requirements for 
-experiments he will be running in his lab. He wants to use chemicals that are
-not typical where the chemical information is more difficult to find. Joe is an 
+Joe is a professor. Joe wants to check the safety requirements for 
+experiments he will be running in his lab. He wants the mechanism for the adverse outcome pathway.
+He wants to use chemicals that are not typical where the chemical information is more difficult to find. Joe is an 
 expert in toxicology. 
 
-Evan is very skilled in computational.
+Evan is a chef. Evan wants to check the dose that was perscribed to him by his doctor. He wants little technical information, that would be easy to understand. He wants an interface that is easily accessible and easy to use. He has has no medical background or any information on toxicology.
 
 ## Use Cases:
-- Access toxicity information
+- Access toxicity information (e.g., lethal dose)
+- Interpret medical figures
 - Learn more about toxicology data
+- Check the dose
+- Confirm safety requirements
+- Acessible for all skill levels 
 ## Components:
+- Data loading
+- Text splitter
+- Data Storage/Embedding
+- Data Retrieval
+- Answer Generation
 - Prompt
 - Jupyter notebook
+- Database
