@@ -21,10 +21,15 @@ Evan is a chef. Evan wants to check the dose that was perscribed to him by his d
 
 ## Component Specifications:
 Name: Document loaders
+
   What it does: Load data from a source, LC loaders: csv, html, json, md, pdf
+  
   Inputs (with type information)
-  Outputs (with type information)
+  
+  Outputs (with type information):
+  
   Components used:
+  
   Side effects: memory consumption
 
 
