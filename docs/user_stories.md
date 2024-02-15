@@ -17,13 +17,57 @@ Evan is a chef. Evan wants to check the dose that was perscribed to him by his d
 - Learn more about toxicology data
 - Check the dose
 - Confirm safety requirements
-- Acessible for all skill levels 
-## Components:
-- Data loading
-- Text splitter
-- Data Storage/Embedding
-- Data Retrieval
-- Answer Generation
-- Prompt
-- Jupyter notebook
-- Database
+- Acessible for all skill levels
+
+## Component Specifications:
+Name: Document loaders
+  What it does: Load data from a source, LC loaders: csv, html, json, md, pdf
+  Inputs (with type information)
+  Outputs (with type information)
+  Components used:
+  Side effects: memory consumption
+
+
+Name: Text splitter
+  What it does: Transform large text data into smaller pieces
+  Inputs (with type information)
+  Outputs (with type information)
+  Components used:
+  Side effects: 
+
+Name: Data Storage/Embedding
+  What it does: 
+  Inputs (with type information)
+  Outputs (with type information)
+  Components used:
+  Side effects:
+
+Name: Data Retrieval
+  What it does: 
+  Inputs (with type information)
+  Outputs (with type information)
+  Components used:
+  Side effects:
+
+Name: Answer Generation
+  What it does: 
+  Inputs (with type information)
+  Outputs (with type information)
+  Components used:
+  Side effects:
+
+Name: Prompt Generation
+  What it does: 
+  Inputs (with type information)
+  Outputs (with type information)
+  Components used:
+  Side effects:
+
+Name: Model 
+
+Name: Database
+  What it does: 
+  Inputs (with type information)
+  Outputs (with type information)
+  Components used:
+  Side effects:
