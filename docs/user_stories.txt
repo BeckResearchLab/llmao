@@ -1,0 +1,88 @@
+## User Stories: 
+Outline of a user story: Who is the user.  What do they want to do with the tool.  What needs and desires do they want for the tool.  What is their 
+skill level.
+
+Ashley is a student enrolled in University. She wants one place to access the LD50 value of chlorobenzene. She needs the information to be easily 
+accessible and reliable. Ashley needs to find the information very quickly, while having the information being easily accessible and reliable. Ashley
+is familiar with machine learning and some of its important components, but is unfamiliar with the field of 
+toxicology. She doesn’t know how to ask the questions (i.e., prompt engineering) and feels like when she asks the questions on other LLMs, she feels 
+like the model is not understanding her question correctly. 
+
+Joe is a professor of toxicology. Joe wants to check the safety requirements for some experiments he will be running in his lab. He wants the mechanism 
+for the adverse outcome pathway of a chemical that he has not used before. He wants to use chemicals that he has not used in his lab before  where the 
+chemical information can be more difficult to find and may be inaccurate. Joe is an expert in toxicology but has little knowledge on how to interact 
+with an LLM.  
+
+Evan is a chef. Evan wants to double check the dose for a prescription that was perscribed to him by his doctor. He wants little technical information 
+about the drug. He wants an interface that is easily accessible and easy to use. He has has no medical background or any knowledge on toxicology.
+
+## Use Cases:
+- Access toxicity information (e.g., lethal dose)
+- Interpret medical figures
+- Learn more about toxicology data
+- Check the dose for a prescription
+- Confirm safety requirements for a specific chemical
+- Acessible for all skill levels
+
+## Component Specifications:
+Name: Document loaders
+What it does: Load data from a source, LC loaders: csv, html, json, md, pdf
+  
+Inputs (with type information)
+  
+Outputs (with type information):
+  
+Components used:
+  
+Side effects: memory consumption
+
+
+Component Name: Text splitter
+What it does: Transform large text data into smaller pieces that are more better suited to your application.
+Inputs (with type information)
+Outputs (with type information)
+Components used:
+Side effects: 
+
+Component Name: Data Storage/Embedding
+What it does: 
+Inputs (with type information)
+Outputs (with type information)
+Components used:
+Side effects:
+
+Component Name: Data Retrieval
+What it does: 
+Inputs (with type information)
+Outputs (with type information)
+Components used:
+Side effects:
+
+Component Name: Answer Generation
+What it does: 
+Inputs (with type information)
+Outputs (with type information)
+Components used:
+Side effects:
+
+Component Name: Prompt Generation
+What it does: 
+Inputs (with type information)
+Outputs (with type information)
+Components used:
+Side effects:
+
+Component Name: Model 
+What it does:
+Inputs (with type information)
+Outputs (with type information)
+Components used:
+Side effects:
+
+Component Name: Database
+What it does: 
+Inputs (with type information)
+Outputs (with type information)
+Components used:
+Side effects:
+
