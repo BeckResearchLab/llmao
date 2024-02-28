@@ -1,8 +1,10 @@
-name: test1
+name: lctest1
 channels:
   - conda-forge
   - defaults
 dependencies:
+  - _libgcc_mutex=0.1
+  - _openmp_mutex=4.5
   - aiohttp=3.9.3
   - aiosignal=1.3.1
   - appdirs=1.4.4
@@ -19,7 +21,6 @@ dependencies:
   - certifi=2024.2.2
   - charset-normalizer=3.3.2
   - click=8.1.7
-  - colorama=0.4.6
   - contourpy=1.1.1
   - cycler=0.12.1
   - dataclasses-json=0.5.7
@@ -37,8 +38,8 @@ dependencies:
   - importlib_resources=6.1.2
   - joblib=1.3.2
   - kiwisolver=1.4.5
-  - langchain=0.0.153
   - lcms2=2.16
+  - ld_impl_linux-64=2.40
   - lerc=4.0.0
   - libabseil=20240116.1
   - libblas=3.9.0
@@ -47,21 +48,28 @@ dependencies:
   - libbrotlienc=1.1.0
   - libcblas=3.9.0
   - libcxx=16.0.6
+  - libcxxabi=16.0.6
   - libdeflate=1.19
   - libexpat=2.5.0
   - libffi=3.4.2
-  - libgfortran
-  - libgfortran5
+  - libgcc-ng=13.2.0
+  - libgfortran=3.0.0
+  - libgfortran-ng=13.2.0
+  - libgfortran5=13.2.0
   - libjpeg-turbo=3.0.0
   - liblapack=3.9.0
   - liblapacke=3.9.0
+  - libnsl=2.0.1
   - libopenblas=0.3.26
   - libpng=1.6.43
   - libprotobuf=4.25.2
   - libsqlite=3.45.1
+  - libstdcxx-ng=13.2.0
   - libtiff=4.6.0
+  - libuuid=2.38.1
   - libwebp-base=1.3.2
   - libxcb=1.15
+  - libxcrypt=4.4.36
   - libzlib=1.2.13
   - llvm-openmp=17.0.6
   - marshmallow=3.21.0
@@ -71,9 +79,9 @@ dependencies:
   - munkres=1.1.4
   - mypy_extensions=1.0.0
   - ncurses=6.4
+  - nomkl=1.0
   - numexpr=2.8.4
   - numpy=1.24.4
-  - openai=0.28.1
   - openapi-schema-pydantic=1.2.4
   - openblas=0.3.26
   - openjpeg=2.5.1
@@ -85,7 +93,6 @@ dependencies:
   - pathtools=0.1.2
   - pillow=10.2.0
   - pip=24.0
-  - platformdirs=4.2.0
   - plotly=5.19.0
   - pooch=1.8.1
   - protobuf=4.25.2
@@ -122,7 +129,6 @@ dependencies:
   - typing_inspect=0.9.0
   - tzdata=2024a
   - unicodedata2=15.1.0
-  - urllib3=2.2.1
   - wandb=0.16.3
   - wheel=0.42.0
   - xorg-libxau=1.0.11
@@ -132,4 +138,108 @@ dependencies:
   - yarl=1.9.4
   - zipp=3.17.0
   - zstd=1.5.5
-prefix: /Users/ali/opt/anaconda3/envs/test1
+  - pip:
+      - aiohttp-cors==0.7.0
+      - anyio==4.3.0
+      - asgiref==3.7.2
+      - asyncssh==2.14.2
+      - awscli==1.32.51
+      - backports-zoneinfo==0.2.1
+      - bcrypt==4.1.2
+      - blessed==1.20.0
+      - boto3==1.34.51
+      - botocore==1.34.51
+      - cffi==1.16.0
+      - colorama==0.4.4
+      - colorful==0.5.6
+      - cryptography==42.0.5
+      - deprecated==1.2.14
+      - distlib==0.3.8
+      - distro==1.9.0
+      - docutils==0.16
+      - exceptiongroup==1.2.0
+      - fastapi==0.110.0
+      - filelock==3.13.1
+      - fsspec==2023.5.0
+      - google-api-core==2.17.1
+      - google-auth==2.28.1
+      - googleapis-common-protos==1.62.0
+      - gpustat==1.1.1
+      - grpcio==1.62.0
+      - h11==0.14.0
+      - httpcore==1.0.4
+      - httpx==0.27.0
+      - importlib-metadata==6.11.0
+      - jinja2==3.1.3
+      - jmespath==1.0.1
+      - jsonpatch==1.33
+      - jsonpointer==2.4
+      - jsonschema==4.21.1
+      - jsonschema-specifications==2023.12.1
+      - langchain==0.1.9
+      - langchain-community==0.0.24
+      - langchain-core==0.1.27
+      - langchain-openai==0.0.8
+      - langsmith==0.1.10
+      - markdown-it-py==3.0.0
+      - markupsafe==2.1.5
+      - mdurl==0.1.2
+      - msgpack==1.0.7
+      - networkx==3.1
+      - nvidia-ml-py==12.535.133
+      - openai==1.12.0
+      - opencensus==0.11.4
+      - opencensus-context==0.1.3
+      - opentelemetry-api==1.23.0
+      - opentelemetry-exporter-otlp-proto-common==1.23.0
+      - opentelemetry-exporter-otlp-proto-http==1.23.0
+      - opentelemetry-instrumentation==0.44b0
+      - opentelemetry-instrumentation-asgi==0.44b0
+      - opentelemetry-instrumentation-fastapi==0.44b0
+      - opentelemetry-instrumentation-requests==0.44b0
+      - opentelemetry-proto==1.23.0
+      - opentelemetry-sdk==1.23.0
+      - opentelemetry-semantic-conventions==0.44b0
+      - opentelemetry-util-http==0.44b0
+      - orjson==3.9.15
+      - paramiko==3.4.0
+      - pendulum==3.0.0
+      - pexpect==4.9.0
+      - pkgutil-resolve-name==1.3.10
+      - platformdirs==3.11.0
+      - prettytable==3.10.0
+      - prometheus-client==0.20.0
+      - ptyprocess==0.7.0
+      - pulp==2.8.0
+      - py-spy==0.3.14
+      - pyasn1==0.5.1
+      - pyasn1-modules==0.3.0
+      - pycparser==2.21
+      - pygments==2.17.2
+      - pynacl==1.5.0
+      - pyopenssl==24.0.0
+      - python-dotenv==1.0.1
+      - ray==2.6.3
+      - referencing==0.33.0
+      - regex==2023.12.25
+      - rich==13.7.0
+      - rpds-py==0.18.0
+      - rsa==4.7.2
+      - runhouse==0.0.19
+      - s3transfer==0.10.0
+      - skypilot==0.4.1
+      - smart-open==7.0.1
+      - sniffio==1.3.1
+      - sshfs==2023.10.0
+      - sshtunnel==0.4.0
+      - starlette==0.36.3
+      - tabulate==0.9.0
+      - tiktoken==0.6.0
+      - time-machine==2.13.0
+      - typer==0.9.0
+      - urllib3==1.26.18
+      - uvicorn==0.27.1
+      - virtualenv==20.21.0
+      - wcwidth==0.2.13
+      - wrapt==1.16.0
+prefix: /opt/miniconda/envs/lctest1
