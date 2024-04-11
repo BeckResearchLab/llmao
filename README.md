@@ -10,7 +10,7 @@ Large language models (LLM) continue to be developed and are quickly becoming in
 
 Many of these LLMs have been trained on massive amounts of data. While many LLMs can offer a lot of knowledgeable scientific information, the LLM can often be inaccurate or not provide enough information for the general public to understand complex scientific questions. 
 
-Our group hopes to build a bridge between scientists (e.g., biologists, and toxicologists) and the general population. Instead of the general public having to search through old dusty textbooks to find out more about toxicology, we are hoping that they can turn to this LLM that can sort through the massive amounts of textbooks, papers, journals, etc., to provide insightful, accurate, and concise information to these users within a matter of seconds. 
+Our group hopes to build a bridge between scientists (e.g., biologists, and toxicologists) and the general population. Instead of the general public having to search through multiple textbooks with confusing graphics to find out more about toxicology, we are hoping that they can turn to this LLM that can sort through the massive amounts of textbooks, papers, journals, etc., to provide insightful, accurate, and concise information to these users within a matter of seconds. 
 
 ## How this is being accomplished
 
