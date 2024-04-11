@@ -17,7 +17,7 @@ Our group hopes to build a bridge between scientists (e.g., biologists, and toxi
 
 To perform retrieval augmented generation (RAG) with the adverse outcome pathway (AOP) database, we are following the steps outlined in the figure below.
 
-![image.png](attachment:4facb5f9-fea5-4ed6-8835-422fd0f76886.png)
+![image](https://github.com/BeckResearchLab/llmao/assets/155478918/7c64c8b2-8341-48a2-bf76-f8d6c6793165)
 
 We have been accomplishing this by using Langchain, which is a framework for developing applications powered by large language models (LLMS).
 
