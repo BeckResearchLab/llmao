@@ -1,4 +1,3 @@
-# llmao
 # LLaMo
 
 **LLaMo** is a data science graduate capstone project from the Chemical Engineering department at the University of Washington. 
