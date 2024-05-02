@@ -27,62 +27,51 @@ about the drug. He wants an interface that is easily accessible and easy to use.
 ## Component Specifications:
 Name: Document loaders
 What it does: Load data from a source, LC loaders: csv, html, json, md, pdf
-  
-Inputs (with type information)
-  
-Outputs (with type information):
-  
-Components used:
-  
+Inputs: A file type (i.e., CSV, HTML, JSON, Markdown, PDF) and a source specification (could be a file path, a URL, an API 
+endpoint, or a database query, depending on where the data is stored).
+Outputs: Document content (could be in the raw form or preprocessed), status information (information about the success or failure of 
+the document loading process), logs (detailed logs of the loading process that can be used for debugging and optimization.
+Components used: Text splitter and database
 Side effects: memory consumption
 
 
 Component Name: Text splitter
-What it does: Transform large text data into smaller pieces that are more better suited to your application.
-Inputs (with type information)
-Outputs (with type information)
-Components used:
-Side effects: 
+What it does: Transform large text data into smaller pieces that are more better suited to your application. These transformations of the text may include 
+splitting, combining, and filtering, and otherwise manipulating the document.
+Inputs: Document content (the actual text that needs to be split, combined, and filtered) and the splitting parameters (something that 
+specifies how to split the text.
+Outputs: The different chunks of the document.
+Components used: Document loaders
 
-Component Name: Data Storage/Embedding
-What it does: 
-Inputs (with type information)
-Outputs (with type information)
-Components used:
-Side effects:
+Component Name: Data Storage/Embedding/Database
+What it does: Saves the data in a structed format within the databases or filesystems. This component also involved transforming the text into embeddings.
+Inputs: Data (i.e., the data that needs to be stored) and information on how the data should be stored or embedded.
+Outputs: The stored data (now structured and stored) and  embeddings (high-dimensional vector representations of the input text).
+Components used: Document loader, data retrival, and database.
 
-Component Name: Data Retrieval
-What it does: 
-Inputs (with type information)
-Outputs (with type information)
-Components used:
-Side effects:
+Component Name: Data Retrival
+What it does: Interface that returns documents given an unstructured query.
+Inputs: A string query (the information need or the question for which the documents are being retrieved).
+Outputs: A list of documents that are deemed relevant to the query (typically the list also has the document ID, title, and source).
+Components used: Data storage, database, and answer generation.
 
 Component Name: Answer Generation
-What it does: 
-Inputs (with type information)
-Outputs (with type information)
-Components used:
-Side effects:
+What it does: Reads through the user input, retrieves the relevant information, and generates a response that is relevant and accurate. 
+Inputs: Question/prompt from the user and the retrieved documents.
+Outputs: The generated answer that is relevant to the question being asked, accurate according to the best of the models knowledge, and coherent.
+Components used: Text splitter, data retrieval, model, database.
 
 Component Name: Prompt Generation
-What it does: 
-Inputs (with type information)
-Outputs (with type information)
-Components used:
-Side effects:
+What it does: Creates well-formulated prompts that can effectively communicate the task or the question to the LLM. It should use prompt engineering to learn 
+from different user interactions to improve the effectiveness of the prompts over time.
+Inputs: A description of the task needed from the LLM and the  user's previous queries.
+Outputs: The generated prompt to be fed to the LLM.
+Components used: Data retrieval and answer generation.
 
 Component Name: Model 
-What it does:
-Inputs (with type information)
-Outputs (with type information)
-Components used:
-Side effects:
-
-Component Name: Database
-What it does: 
-Inputs (with type information)
-Outputs (with type information)
-Components used:
-Side effects:
+What it does: The core element of the language models that is responsible for processing the natural language input, understanding the context, and generating 
+an appropriate natural language.
+Inputs: Prompts or queries.
+Outputs: Generated text.
+Components used: Data retrieval, answer generation, and prompt generation.
 
