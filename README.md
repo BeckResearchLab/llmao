@@ -1,8 +1,12 @@
-# LLaMo
+# LLMao
 
-**LLaMo** is a data science graduate capstone project from the Chemical Engineering department at the University of Washington. 
+**LLMao** is a data science graduate capstone project from the Chemical Engineering department at the University of Washington. 
 
 **Goal of LLaMo: Develop a large language model (LLM) that can perform retrieval augmented generation (RAG) with the adverse outcome pathway (AOP) database from the Environmental Protection Agency (EPA).**
+
+## Use
+
+After cloning the repository, set up a conda environment using env.yml (use basic-rag branch for now). Set up your .aws config profile using either aws configure (via AWS CLI) or manually (for more info on AWS configuration: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html). Run bedrock.py with the AOP db in the working directory.
 
 ## Motivation
 
