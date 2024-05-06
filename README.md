@@ -6,7 +6,23 @@
 
 ## Use
 
-After cloning the repository, set up a conda environment using env.yml (use basic-rag branch for now). Set up your .aws config profile using either aws configure (via AWS CLI) or manually (for more info on AWS configuration: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html). Run bedrock.py with the AOP db in the working directory.
+After cloning the repository, set up a conda environment using environment.yml (use basic-rag branch for now):
+```python
+conda env create --file environment.yml
+```
+
+Set up your .aws config profile using either aws configure (via AWS CLI) or manually (for more info on AWS configuration: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html). 
+
+To run the streamlit application, use:
+
+```python
+streamlit run main.py
+```
+
+To run the model without a GUI, use:
+```python
+python bedrock.py
+```
 
 ## Motivation
 
