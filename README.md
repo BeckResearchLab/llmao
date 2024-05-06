@@ -4,7 +4,7 @@
 
 **Goal of LLaMo: Develop a large language model (LLM) that can perform retrieval augmented generation (RAG) with the adverse outcome pathway (AOP) database from the Environmental Protection Agency (EPA).**
 
-## Use
+## Instructions
 
 After cloning the repository, set up a conda environment using environment.yml (use basic-rag branch for now):
 ```python
