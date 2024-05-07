@@ -6,7 +6,7 @@
 
 ## Instructions
 
-After cloning the repository, set up a conda environment using environment.yml (use basic-rag branch for now):
+After cloning the repository, set up a conda environment using environment.yml:
 ```python
 conda env create --file environment.yml
 ```
