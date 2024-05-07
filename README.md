@@ -24,6 +24,8 @@ To run the model without a GUI, use:
 python bedrock.py
 ```
 
+![image](https://github.com/BeckResearchLab/llmao/assets/86797031/4dcd3322-6d92-40b6-ae6f-1d4b30eb2983)
+
 ## Motivation
 
 Large language models (LLM) continue to be developed and are quickly becoming integrated into our everyday lives. 
