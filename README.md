@@ -56,11 +56,7 @@ This dataset has been chosen as this group is specifically building an LLM that 
 
 Below are a few tasks that this group hopes to accomplish within the allotted time for this capstone project:
 * Perform basic RAG with the LLM (i.e., test that the LLM successfully connects to the AOP and can retrieve the necessary information and then generate a response with context to the original question).
-* Determine the best prompt engineering practices.
-* Evaluate the model's responses. Based on the model's response, we can successfully determine if the model will need fine-tuning.
-
-Below are tasks that are still vital, but may not be able to be accomplished within the short time frame of this capstone, but would still prove beneficial if completed:
-* Build a graphical user interface (GUI) where users could ask the model a toxicological-specific question and the model successfully responds.
+* Evaluate the model's responses based on various prompts. Based on the model's response, we can successfully determine if the model will need fine-tuning.
 * Incorporate references into the model to provide the user with more context on where the LLM is generating the response from.
 * Perform fine-tuning on the model as necessary.
 
