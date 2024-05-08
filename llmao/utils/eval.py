@@ -22,7 +22,6 @@ def Generator(n=5, k=5, dict=True):
     llm = BedrockChat(
         credentials_profile_name="default", model_id="anthropic.claude-3-sonnet-20240229-v1:0", verbose=True)
 
-
     generate_prompt = """ <instructions>
     You are an expert at adverse outcome pathways (AOP) and SQLite databases; you have familiarity with executing SQLite queries
     over the AOP database. Now, imagine you are another  AOP expert interested in asking advanced, high level questions about the AOP database.
@@ -92,14 +91,52 @@ def Generator(n=5, k=5, dict=True):
         data['Query'] = values
         return data
 
-def Chat_Evaluator():
+def Chat_Evaluator(question, chat_history):
     '''
     Evaluate user satisfaction based on chat history
     '''
 
+    prompt = ''' <instructions> 
+    You are a friendly assistant given a chat history between a human user and a large language model chatbot. Your goal is to
+    evaluate, based on the chat history, whether or not the user is satisfied with the performance of the large language model.
+    Pay attention to indicators including, but not limited to: how the user's tone changes throughout the converastion, whether or not their questions are answered sufficiently,
+    and whether the user is repeating similar questions multiple times. You will rate the conversation history on a scale of -1 - 1 based
+    on the criterion below: </instructions>
+
+    <context>
+    Chat history: {chat_history}
+    Current question: {question}
+    Rating criteria:
+        -1 - The user is unsatisfied with their conversation, their questions are not fully answered, etc.
+        0 - No chat history, the user is neutral towards their conversation, or not enough information to determine
+        1 - The user is satisfied with their conversation, their questions are fully answered
+    </context>
+
+    <formatting>Output ONLY your rating for the user satisfaction based on the rating scale & criteria above. Do not respond
+    with anything other than the user satisfaction rating: </formatting>
+    '''
+
+    llm = BedrockChat(
+        credentials_profile_name="default", model_id="anthropic.claude-3-sonnet-20240229-v1:0", verbose=True)
+
+    chain = ChatPromptTemplate.from_template(prompt) | llm | StrOutputParser()
+    
+    rating = chain.invoke({
+        'question': question,
+        'chat_history': chat_history
+    })
+
+    # user question, ai_resposne, rating
+    if len(chat_history) >= 2:
+        with open("/home/ubuntu/llmao/llmao/data/chat_eval.csv","a") as rating_file:
+            rating_file.write((str(chat_history[-1]) + ',' + str(chat_history[-2]) + ',' + str(rating)) + "\n")
+    else:
+        pass
+    return    
+
 def AOP_Query_Evaluator(question, query):
     '''
-    evaluate whether the SQLite query provided sufficiently answers the provided user question
+    Evaluate whether the SQLite query provided sufficiently answers the provided user question
     args
         question - user input question about the AOP database, str
         query - SQLite query to retrieve relevant response information

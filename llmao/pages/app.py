@@ -5,10 +5,12 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from utils.querying import AOP_query_chain
 from utils.utils import Questions
+from utils.eval import Chat_Evaluator
 from langchain_community.chat_models import BedrockChat
 import random
 
-llm = BedrockChat(credentials_profile_name="default", model_id="anthropic.claude-3-sonnet-20240229-v1:0", verbose=True)
+#llm = BedrockChat(credentials_profile_name="default", model_id="anthropic.claude-3-sonnet-20240229-v1:0", verbose=True)
+llm = BedrockChat(credentials_profile_name="default", model_id="mistral.mixtral-8x7b-instruct-v0:1", verbose=True)
 
 # page configuration
 st.set_page_config(
@@ -55,10 +57,14 @@ def route(human_question, chat_history):
         "question": human_question
     }).lower())
 
+    if chat_history is not None:
+        Chat_Evaluator(human_question, chat_history)
+    else:
+        pass
+
     # if aop database is needed to answer the question
     if str(path) == 'database':
         # enter sql chain
-        # return AOP_route(human_question, chat_history)
         return AOP_query_chain(human_question, chat_history)
     # if a database is not needed to answer the question, answer normally
     else:
@@ -73,7 +79,8 @@ def route(human_question, chat_history):
         """
 
         prompt = ChatPromptTemplate.from_template(template)
-        chain = prompt | llm | StrOutputParser()
+        chain = prompt | llm | StrOutputParser() 
+
         return chain.stream({
             "user_question": human_question, 
             "chat_history": chat_history
