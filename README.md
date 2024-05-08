@@ -4,9 +4,27 @@
 
 **Goal of LLaMo: Develop a large language model (LLM) that can perform retrieval augmented generation (RAG) with the adverse outcome pathway (AOP) database from the Environmental Protection Agency (EPA).**
 
-## Use
+## Instructions
 
-After cloning the repository, set up a conda environment using env.yml (use basic-rag branch for now). Set up your .aws config profile using either aws configure (via AWS CLI) or manually (for more info on AWS configuration: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html). Run bedrock.py with the AOP db in the working directory.
+After cloning the repository, set up a conda environment using environment.yml:
+```python
+conda env create --file environment.yml
+```
+
+Set up your .aws config profile using either aws configure (via AWS CLI) or manually (for more info on AWS configuration: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html). 
+
+To run the streamlit application, use:
+
+```python
+streamlit run main.py
+```
+
+To run the model without a GUI, use:
+```python
+python bedrock.py
+```
+
+![image](https://github.com/BeckResearchLab/llmao/assets/86797031/4dcd3322-6d92-40b6-ae6f-1d4b30eb2983)
 
 ## Motivation
 
@@ -38,11 +56,7 @@ This dataset has been chosen as this group is specifically building an LLM that 
 
 Below are a few tasks that this group hopes to accomplish within the allotted time for this capstone project:
 * Perform basic RAG with the LLM (i.e., test that the LLM successfully connects to the AOP and can retrieve the necessary information and then generate a response with context to the original question).
-* Determine the best prompt engineering practices.
-* Evaluate the model's responses. Based on the model's response, we can successfully determine if the model will need fine-tuning.
-
-Below are tasks that are still vital, but may not be able to be accomplished within the short time frame of this capstone, but would still prove beneficial if completed:
-* Build a graphical user interface (GUI) where users could ask the model a toxicological-specific question and the model successfully responds.
+* Evaluate the model's responses based on various prompts. Based on the model's response, we can successfully determine if the model will need fine-tuning.
 * Incorporate references into the model to provide the user with more context on where the LLM is generating the response from.
 * Perform fine-tuning on the model as necessary.
 
