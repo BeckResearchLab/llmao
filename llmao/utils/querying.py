@@ -8,12 +8,13 @@ from langchain_core.runnables import RunnablePassthrough
 llm = BedrockChat(
     credentials_profile_name="default", model_id="anthropic.claude-3-sonnet-20240229-v1:0", verbose=True)
 
-def AOP_query_chain(question, chat_history):
+def AOP_query_chain(question, chat_history, stream=True):
     ''' Answer user questions using the adverse outcome pathway database by constructing & executing SQLite queries
 
     Args
         question - 
         chat_history -
+        stream - stream the LLM chain repsonse, if False use chain.invoke()
     Output
         
     '''
@@ -25,7 +26,9 @@ def AOP_query_chain(question, chat_history):
     You are a SQLite expert. At the end of this query, you will be given a user question about the adverse outcome pathway (AOP)
     database. Your sole purpose is to find a SQL query to retrieve information from the AOP database which would answer the question.
     Your goal is not to execute the query or provide any information other than the SQLite query. Form the simplest query possible
-    to answer the user question. The query SHOULD NOT for any reason mention Bedrock or us-east-1 region. </instructions> 
+    to answer the user question. The query SHOULD NOT for any reason mention Bedrock or us-east-1 region.
+    Unless the user's question suggests otherwise, limit your response to the {top_k} results by using a LIMIT clause.
+    Address your response directly to the user.
     Use any or all of tables found in the keys of {table_dict} and only the columns found in the values of {table_dict}. </instructions> 
     
     <example>
@@ -93,7 +96,8 @@ def AOP_query_chain(question, chat_history):
     sqliteConnection.close()
     
     aop_answer = """ <instructions>
-    Construct an answer to the following user question given the corresponding SQL query, and SQL result, and AOP database information.
+    You are a helpful assistant trying to answer a user's question using the results of a SQLite query that was already executed for you. 
+    Use all of the information to fully answer the user's question in the context of the adverse outcome pathway database. 
     Be concise, but feel free to give more context if the user asks an open-ended question. Your goal first and foremost is to address
     the user's question in a friendly, cheerful, and informative manner.
     Answer the question completely and concisely, while also taking into account the {chat_history} </instructions>
@@ -111,12 +115,20 @@ def AOP_query_chain(question, chat_history):
 
     answer_chain = ChatPromptTemplate.from_template(aop_answer) | llm | StrOutputParser()
 
-    return answer_chain.stream({
-        'question': question,
-        'query': query,
-        'result': result,
-        'chat_history': chat_history
-    })
+    if stream:
+        return answer_chain.stream({
+            'question': question,
+            'query': query,
+            'result': result,
+            'chat_history': chat_history
+        })
+    else:
+        return answer_chain.invoke({
+            'question': question,
+            'query': query,
+            'result': result,
+            'chat_history': chat_history
+        })
 
 def AOP_route(question, chat_history):
     ''' The goal of this function is to take in a question about the AOP Database and use a LLM chain to determine which table(s) to use when answering
