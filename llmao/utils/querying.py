@@ -2,8 +2,10 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 import sqlite3
 from langchain_community.chat_models import BedrockChat
-from utils.utils import AOP_Info
+from utils.utils import AOP_Info, langfuse_handler
 from langchain_core.runnables import RunnablePassthrough
+from langchain_community.document_loaders import JSONLoader
+import langfuse
 
 llm = BedrockChat(
     credentials_profile_name="default", model_id="anthropic.claude-3-sonnet-20240229-v1:0", verbose=True)
@@ -89,12 +91,12 @@ def AOP_query_chain(question, chat_history, stream=True):
             cursor.execute(query)
             result = cursor.fetchall()
         except sqlite3.OperationalError:
-            # impmement some sort of error chain
+            # implement some sort of error chain
             error_response
 
     cursor.close()
     sqliteConnection.close()
-    
+
     aop_answer = """ <instructions>
     You are a helpful assistant trying to answer a user's question using the results of a SQLite query that was already executed for you. 
     Use all of the information to fully answer the user's question in the context of the adverse outcome pathway database. 
@@ -113,22 +115,23 @@ def AOP_query_chain(question, chat_history, stream=True):
     </formatting>
     """
 
-    answer_chain = ChatPromptTemplate.from_template(aop_answer) | llm | StrOutputParser()
+    answer_chain = ChatPromptTemplate.from_template(aop_answer) | llm | StrOutputParser()    
 
     if stream:
+        # return the query result back in order to track the trace
         return answer_chain.stream({
             'question': question,
             'query': query,
             'result': result,
             'chat_history': chat_history
-        })
+        }, config={"callbacks":[langfuse_handler]})
     else:
         return answer_chain.invoke({
             'question': question,
             'query': query,
             'result': result,
             'chat_history': chat_history
-        })
+        }, config={"callbacks":[langfuse_handler]})
 
 def AOP_route(question, chat_history):
     ''' The goal of this function is to take in a question about the AOP Database and use a LLM chain to determine which table(s) to use when answering
@@ -161,7 +164,7 @@ def AOP_route(question, chat_history):
     table_dict = chain.invoke({
         'aop_dict': AOP_Info,
         'question': question
-    })
+    }, config={"callbacks":[langfuse_handler]})
 
     return table_dict
 
@@ -173,3 +176,6 @@ def error_response():
     chain = ChatPromptTemplate.from_template(prompt) | llm | StrOutputParser()
 
     return chain.stream()
+
+def AOP_wiki_chain(question, chat_history):
+    return

@@ -1,4 +1,8 @@
 import sqlite3
+from langfuse.callback import CallbackHandler
+from streamlit.runtime import get_instance
+from streamlit.runtime.scriptrunner import get_script_run_ctx
+import streamlit as st
 
 # Add examples questions: queries here
 Queries = {
@@ -37,3 +41,21 @@ for entry in info_dict:
     # else create a dictionary entry for the table
     else:
         AOP_Info[table] = [entry[1]]
+
+def get_session():
+    '''
+    get user session id
+    '''
+    runtime = get_instance()
+    session_id = get_script_run_ctx().session_id
+    session_info = runtime._session_mgr.get_session_info(session_id)
+    if session_info is None:
+        raise RuntimeError("Couldn't get your Streamlit Session object.")
+    return str(session_info.session)
+
+langfuse_handler = CallbackHandler(
+    public_key=st.secrets['public_key'],
+    secret_key=st.secrets['secret_key'],
+    host="https://cloud.langfuse.com", # 🇺🇸 US region
+    session_id = get_session()
+)

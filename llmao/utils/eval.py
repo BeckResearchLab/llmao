@@ -8,6 +8,9 @@ from ast import literal_eval
 import numpy as np
 from langchain_core.runnables import RunnablePassthrough
 
+llm = BedrockChat(
+    credentials_profile_name="default", model_id="anthropic.claude-3-sonnet-20240229-v1:0", verbose=True)
+
 def Generator(n=5, k=5, dict=True):
     '''
     generate AOP questions and corresponding SQLite queries
@@ -18,9 +21,6 @@ def Generator(n=5, k=5, dict=True):
         data - dictionary {question:query} or 
             pandas dataframe, column 1 is the question and column 2 is the SQLite query
     '''
-
-    llm = BedrockChat(
-        credentials_profile_name="default", model_id="anthropic.claude-3-sonnet-20240229-v1:0", verbose=True)
 
     generate_prompt = """ <instructions>
     You are an expert at adverse outcome pathways (AOP) and SQLite databases; you have familiarity with executing SQLite queries
@@ -94,6 +94,11 @@ def Generator(n=5, k=5, dict=True):
 def Chat_Evaluator(question, chat_history):
     '''
     Evaluate user satisfaction based on chat history
+    args
+        user question
+        chat history
+    returns
+        no returns, (current human question, previous AI response, and rating) are written to /llmao/data/chat_eval.csv
     '''
 
     prompt = ''' <instructions> 
@@ -107,12 +112,14 @@ def Chat_Evaluator(question, chat_history):
     Chat history: {chat_history}
     Current question: {question}
     Rating criteria:
-        -1 - The user is unsatisfied with their conversation, their questions are not fully answered, etc.
+        -2 - The user is deeply unsatisfied with their conversation, their questions are not answered whatsoever, they are not happy.
+        -1 - The user is somewhat unsatisfied with their conversation, their questions are not fully answered, etc.
         0 - No chat history, the user is neutral towards their conversation, or not enough information to determine
-        1 - The user is satisfied with their conversation, their questions are fully answered
+        1 - The user is somewhat satisfied with their conversation, their questions are mostly answered
+        2 - The user is very satisfied with their conversation, their questions are fully answered
     </context>
 
-    <formatting>Output ONLY your rating for the user satisfaction based on the rating scale & criteria above. Do not respond
+    <formatting> Output ONLY your rating for the user satisfaction based on the rating scale & criteria above. Do not respond
     with anything other than the user satisfaction rating: </formatting>
     '''
 
@@ -175,16 +182,4 @@ def AOP_Query_Evaluator(question, query):
         'query': query,
         'aop_dict': AOP_Info
     })
-
-def Chat_Session_Evaluator(chat_history):
-    '''
-    '''
-
-    prompt = '''
-    '''
-    return
-
-    
-
-
 

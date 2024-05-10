@@ -1,16 +1,20 @@
 import streamlit as st
-from langchain_core.messages import HumanMessage, AIMessage
+from langchain_.messages import HumanMessage, AIMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from utils.querying import AOP_query_chain
-from utils.utils import Questions
+from utils.utils import Questions, AOP_Info, langfuse_handler
 from utils.eval import Chat_Evaluator
 from langchain_community.chat_models import BedrockChat
 import random
+from langfuse import Langfuse
 
-#llm = BedrockChat(credentials_profile_name="default", model_id="anthropic.claude-3-sonnet-20240229-v1:0", verbose=True)
-llm = BedrockChat(credentials_profile_name="default", model_id="mistral.mixtral-8x7b-instruct-v0:1", verbose=True)
+langfuse = Langfuse()
+langfuse.auth_check()
+
+llm = BedrockChat(credentials_profile_name="default", model_id="anthropic.claude-3-sonnet-20240229-v1:0", verbose=True)
+#llm = BedrockChat(credentials_profile_name="default", model_id="mistral.mixtral-8x7b-instruct-v0:1", verbose=True)
 
 # page configuration
 st.set_page_config(
@@ -37,16 +41,23 @@ for message in st.session_state.chat_history:
 
 # first, classify the users question by topic
 def route(human_question, chat_history):
-    intro_prompt =  PromptTemplate.from_template("""
+    intro_prompt =  PromptTemplate.from_template(""" <instructions>
         Given the user question below, classify whether it has anything at all to do with the
-        adverse outcome pathway (AOP) database, tables, or querying, or not. If it involves databases, tables, or queries, respond with 'Database'.
-        otherwise respond with 'None'.
-        Do not respond with more than one word, and do not include punctuation or uppercase letters.
+        adverse outcome pathway (AOP) database or any of its tables, listed below. 
+        If the question directly mentions the AOP database, any of its tables, or any of its columns, respond with database. Otherwise, respond with none.
+        Do not respond with more than one word, and do not include punctuation or uppercase letters. </instructions>
+                        
+        <examples>
+            Question: Describe the AOP gene table
+            Your response: database
+            Question: Can you tell me which molecules in the AOP database are the nastiest nasties of the bunch?
+            Your response: database
+        </example>
 
-        <question>
-        {question}
-        </question>
-
+        <context> 
+        AOP database schema dictionary: {aop_dict}
+        User question: {question}
+        </context>
         Classification:"""
     )
     
@@ -54,8 +65,9 @@ def route(human_question, chat_history):
 
     # path variable is database or none
     path = (route_chain.invoke({
-        "question": human_question
-    }).lower())
+        "question": human_question,
+        "aop_dict": AOP_Info
+    }, config={"callbacks":[langfuse_handler]}).lower())
 
     if chat_history is not None:
         Chat_Evaluator(human_question, chat_history)
@@ -123,7 +135,7 @@ if human_question is not None and human_question != "":
         st.markdown(human_question)
 
     with st.chat_message("AI"):
-        #ai_response = st.write_stream(generate_response(human_question, st.session_state.chat_history))
         ai_response = st.write_stream(route(human_question, st.session_state.chat_history))
+        st.write(ai_response)
 
-    st.session_state.chat_history.append(AIMessage(ai_response))
+    st.session_state.chat_history.append(AIMessage(content=ai_response))
