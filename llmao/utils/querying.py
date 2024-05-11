@@ -2,15 +2,17 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 import sqlite3
 from langchain_community.chat_models import BedrockChat
-from utils.utils import AOP_Info, langfuse_handler
+from utils.utils import AOP_Info, langfuse_handler, SQL_context_parser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_community.document_loaders import JSONLoader
 import langfuse
+from langfuse.decorators import observe, langfuse_context
 
 llm = BedrockChat(
     credentials_profile_name="default", model_id="anthropic.claude-3-sonnet-20240229-v1:0", verbose=True)
 
-def AOP_query_chain(question, chat_history, stream=True):
+@observe()
+def AOP_query_chain(question, chat_history, save_context=True, stream=True):
     ''' Answer user questions using the adverse outcome pathway database by constructing & executing SQLite queries
 
     Args
@@ -18,9 +20,10 @@ def AOP_query_chain(question, chat_history, stream=True):
         chat_history -
         stream - stream the LLM chain repsonse, if False use chain.invoke()
     Output
-        
-    '''
 
+    '''
+    
+    langfuse_handler = langfuse_context.get_current_langchain_handler()
     table_dict = AOP_route(question, chat_history)
 
     # first, generate the SQL query based on the user's question
@@ -97,6 +100,17 @@ def AOP_query_chain(question, chat_history, stream=True):
     cursor.close()
     sqliteConnection.close()
 
+    if save_context:
+        context = SQL_context_parser(llm, query=query, query_results=result)
+        langfuse_context.update_current_observation(
+            name='aop_db_retrieval',
+            input=question,
+            output=context,
+            tags=["retrieval"]
+        )
+    else:
+        pass
+
     aop_answer = """ <instructions>
     You are a helpful assistant trying to answer a user's question using the results of a SQLite query that was already executed for you. 
     Use all of the information to fully answer the user's question in the context of the adverse outcome pathway database. 
@@ -116,22 +130,27 @@ def AOP_query_chain(question, chat_history, stream=True):
     """
 
     answer_chain = ChatPromptTemplate.from_template(aop_answer) | llm | StrOutputParser()    
+    
+    langfuse_context.update_current_observation(
+        name = 'aop_db_generation',
+        input = context,
+        tags = ["generation"]
+    )
 
     if stream:
-        # return the query result back in order to track the trace
         return answer_chain.stream({
             'question': question,
             'query': query,
             'result': result,
             'chat_history': chat_history
-        }, config={"callbacks":[langfuse_handler]})
+        }, config={"callbacks": [langfuse_handler]})
     else:
         return answer_chain.invoke({
             'question': question,
             'query': query,
             'result': result,
             'chat_history': chat_history
-        }, config={"callbacks":[langfuse_handler]})
+        }, config={"callbacks": langfuse_handler})
 
 def AOP_route(question, chat_history):
     ''' The goal of this function is to take in a question about the AOP Database and use a LLM chain to determine which table(s) to use when answering
@@ -164,7 +183,7 @@ def AOP_route(question, chat_history):
     table_dict = chain.invoke({
         'aop_dict': AOP_Info,
         'question': question
-    }, config={"callbacks":[langfuse_handler]})
+    })
 
     return table_dict
 

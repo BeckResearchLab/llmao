@@ -1,14 +1,15 @@
 import streamlit as st
-from langchain_.messages import HumanMessage, AIMessage
+from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from utils.querying import AOP_query_chain
 from utils.utils import Questions, AOP_Info, langfuse_handler
-from utils.eval import Chat_Evaluator
+from eval.tools import Chat_Evaluator
 from langchain_community.chat_models import BedrockChat
 import random
 from langfuse import Langfuse
+from langfuse.decorators import observe
 
 langfuse = Langfuse()
 langfuse.auth_check()
@@ -40,6 +41,7 @@ for message in st.session_state.chat_history:
             st.markdown(message.content)
 
 # first, classify the users question by topic
+@observe()
 def route(human_question, chat_history):
     intro_prompt =  PromptTemplate.from_template(""" <instructions>
         Given the user question below, classify whether it has anything at all to do with the
@@ -67,7 +69,7 @@ def route(human_question, chat_history):
     path = (route_chain.invoke({
         "question": human_question,
         "aop_dict": AOP_Info
-    }, config={"callbacks":[langfuse_handler]}).lower())
+    }))
 
     if chat_history is not None:
         Chat_Evaluator(human_question, chat_history)
