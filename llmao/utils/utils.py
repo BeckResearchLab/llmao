@@ -3,6 +3,8 @@ from langfuse.callback import CallbackHandler
 from streamlit.runtime import get_instance
 from streamlit.runtime.scriptrunner import get_script_run_ctx
 import streamlit as st
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
 
 # Add examples questions: queries here
 Queries = {
@@ -59,3 +61,25 @@ langfuse_handler = CallbackHandler(
     host="https://cloud.langfuse.com", # 🇺🇸 US region
     session_id = get_session()
 )
+
+def SQL_context_parser(llm, query, query_results):
+    '''
+    Build a full and complete sentence based off SQLite query, and query_results
+    '''
+    prompt = """ <instructions>
+    You are an expert in both adverse outcome pathways and SQLite queries. You will be given a SQLite query
+    and the results of that SQLite query when executed on the adverse outcome pathway database. Your goal is
+    to take the context given in order to construct a full and complete sentence that explains the query and the results.
+    Do not refer to any information that is not explicitly referenced in the context. </instructions>
+
+    <context> 
+    SQLite Query: {query}
+    SQLite Query Results: {results}
+    """
+
+    chain = ChatPromptTemplate.from_template(prompt) | llm | StrOutputParser()
+
+    return chain.invoke({
+        "query": query,
+        "results": query_results
+    })
