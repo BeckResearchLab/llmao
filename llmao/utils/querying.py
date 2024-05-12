@@ -2,16 +2,15 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 import sqlite3
 from langchain_community.chat_models import BedrockChat
-from utils.utils import AOP_Info, langfuse_handler, SQL_context_parser
-from langchain_core.runnables import RunnablePassthrough
-from langchain_community.document_loaders import JSONLoader
-import langfuse
+from utils.utils import AOP_Info, get_session, SQL_context_parser
+from eval.evaluator import Evaluator
 from langfuse.decorators import observe, langfuse_context
+from langchain_core.messages import AIMessage
 
 llm = BedrockChat(
     credentials_profile_name="default", model_id="anthropic.claude-3-sonnet-20240229-v1:0", verbose=True)
 
-@observe()
+@observe(capture_input=False)
 def AOP_query_chain(question, chat_history, save_context=True, stream=True):
     ''' Answer user questions using the adverse outcome pathway database by constructing & executing SQLite queries
 
@@ -22,7 +21,8 @@ def AOP_query_chain(question, chat_history, save_context=True, stream=True):
     Output
 
     '''
-    
+    langfuse_context.update_current_trace(name = "AOP_DB_RAG", session_id=get_session())
+    langfuse_context.update_current_observation(name="retrieval", session_id=get_session(), input=question)
     langfuse_handler = langfuse_context.get_current_langchain_handler()
     table_dict = AOP_route(question, chat_history)
 
@@ -108,6 +108,7 @@ def AOP_query_chain(question, chat_history, save_context=True, stream=True):
             output=context,
             tags=["retrieval"]
         )
+        AOP_query_chain.context = context
     else:
         pass
 
@@ -131,12 +132,18 @@ def AOP_query_chain(question, chat_history, save_context=True, stream=True):
 
     answer_chain = ChatPromptTemplate.from_template(aop_answer) | llm | StrOutputParser()    
     
-    langfuse_context.update_current_observation(
-        name = 'aop_db_generation',
-        input = context,
-        tags = ["generation"]
-    )
+    # asynchronous invoke to send the user a response before calculating metric
+    answer_stream = answer_chain.invoke({
+            'question': question,
+            'query': query,
+            'result': result,
+            'chat_history': chat_history
+        })
 
+    evaluator = Evaluator(metrics = ['faithfulness', 'answer_relevancy'], data=[question, answer_stream, context])
+    evaluator.evaluate()
+    evaluator.trace_scores()
+    
     if stream:
         return answer_chain.stream({
             'question': question,

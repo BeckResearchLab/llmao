@@ -6,6 +6,7 @@ from langchain_core.runnables import RunnablePassthrough
 import eval.prompts
 from eval.tools import cos_similarity
 from ast import literal_eval
+from langfuse.decorators import observe, langfuse_context
 
 class Metric():
     
@@ -42,7 +43,7 @@ class Evaluator():
             faithfulness (reference free): 
             context_relevancy:
     		answer_relevancy (reference free):
-        data - list of strings in format: ['human_question', 'ai_response', 'context', 'truth']
+        data - list of lists in format: ['human_question', 'ai_response', 'context', 'truth']
                 truth - optional ground truth required for 'correctness'
      '''
 
@@ -127,7 +128,11 @@ class Evaluator():
                 elif metric_name == 'faithfulness':
                     # evaluation = [A, B]
                     evaluation = literal_eval(chain.invoke(input_dict))
-                    scores[metric_name] = evaluation[1] / evaluation[0]
+                    try:
+                        scores[metric_name] = evaluation[1] / evaluation[0]
+                    # try again
+                    except ZeroDivisionError:
+                        evaluation = literal_eval(chain.invoke(input_dict))
                 else:
                     evaluation = chain.invoke(input_dict)
                     scores[metric_name] = evaluation
@@ -151,8 +156,14 @@ class Evaluator():
         self.total_score = np.average(score)
         return self.total_score
     
-    def trace_scores(self, trace_id):
+    def trace_scores(self):
         '''
-        
+        send scores to langfuse
         '''
+        for metric in self._get_metrics():
+            langfuse_context.score_current_trace(
+                name=metric,
+                value=self.results[metric]
+            )
+
         return

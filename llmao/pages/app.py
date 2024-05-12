@@ -6,6 +6,7 @@ from langchain_core.output_parsers import StrOutputParser
 from utils.querying import AOP_query_chain
 from utils.utils import Questions, AOP_Info, langfuse_handler
 from eval.tools import Chat_Evaluator
+from eval.evaluator import Evaluator
 from langchain_community.chat_models import BedrockChat
 import random
 from langfuse import Langfuse
@@ -19,7 +20,8 @@ llm = BedrockChat(credentials_profile_name="default", model_id="anthropic.claude
 
 # page configuration
 st.set_page_config(
-    page_title='llmao',
+    page_title='LLMao',
+    page_icon='🧬',
     layout='wide',
     menu_items={
         'About': '#This is a header.'
@@ -62,7 +64,7 @@ def route(human_question, chat_history):
         </context>
         Classification:"""
     )
-    
+
     route_chain = intro_prompt | llm | StrOutputParser()
 
     # path variable is database or none
