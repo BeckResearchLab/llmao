@@ -15,8 +15,8 @@ from langfuse.decorators import observe
 langfuse = Langfuse()
 langfuse.auth_check()
 
-llm = BedrockChat(credentials_profile_name="default", model_id="anthropic.claude-3-sonnet-20240229-v1:0", verbose=True)
-#llm = BedrockChat(credentials_profile_name="default", model_id="mistral.mixtral-8x7b-instruct-v0:1", verbose=True)
+#llm = BedrockChat(credentials_profile_name="default", model_id="anthropic.claude-3-sonnet-20240229-v1:0", verbose=True)
+llm = BedrockChat(credentials_profile_name="default", model_id="mistral.mixtral-8x7b-instruct-v0:1", verbose=True)
 
 # page configuration
 st.set_page_config(
@@ -45,24 +45,20 @@ for message in st.session_state.chat_history:
 # first, classify the users question by topic
 @observe()
 def route(human_question, chat_history):
-    intro_prompt =  PromptTemplate.from_template(""" <instructions>
+    intro_prompt =  PromptTemplate.from_template("""
         Given the user question below, classify whether it has anything at all to do with the
         adverse outcome pathway (AOP) database or any of its tables, listed below. 
         If the question directly mentions the AOP database, any of its tables, or any of its columns, respond with database. Otherwise, respond with none.
-        Do not respond with more than one word, and do not include punctuation or uppercase letters. </instructions>
+        Do not respond with more than one word, and do not include punctuation or uppercase letters.
                         
-        <examples>
             Question: Describe the AOP gene table
             Your response: database
             Question: Can you tell me which molecules in the AOP database are the nastiest nasties of the bunch?
             Your response: database
-        </example>
 
-        <context> 
         AOP database schema dictionary: {aop_dict}
         User question: {question}
-        </context>
-        Classification:"""
+        Classification: """
     )
 
     route_chain = intro_prompt | llm | StrOutputParser()
@@ -71,7 +67,9 @@ def route(human_question, chat_history):
     path = (route_chain.invoke({
         "question": human_question,
         "aop_dict": AOP_Info
-    }))
+    }))[1:]
+
+    print(path)
 
     if chat_history is not None:
         Chat_Evaluator(human_question, chat_history)
@@ -79,11 +77,13 @@ def route(human_question, chat_history):
         pass
 
     # if aop database is needed to answer the question
-    if str(path) == 'database':
+    if str(path[0]) == 'd':
+        print(True)
         # enter sql chain
         return AOP_query_chain(human_question, chat_history)
     # if a database is not needed to answer the question, answer normally
     else:
+        print(False)
         # generic template
         template = """ <instructions>
         You are a friendly, cheerful, and helpful assistant. 
@@ -140,6 +140,6 @@ if human_question is not None and human_question != "":
 
     with st.chat_message("AI"):
         ai_response = st.write_stream(route(human_question, st.session_state.chat_history))
-        st.write(ai_response)
+        #st.write(ai_response)
 
     st.session_state.chat_history.append(AIMessage(content=ai_response))

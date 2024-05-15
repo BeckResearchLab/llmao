@@ -1,98 +1,83 @@
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-import sqlite3
 from langchain_community.chat_models import BedrockChat
 from utils.utils import AOP_Info, Queries
 import pandas as pd
-from ast import literal_eval
 import numpy as np
 from numpy.linalg import norm
 from langchain_core.runnables import RunnablePassthrough
 from langchain_community.embeddings.bedrock import BedrockEmbeddings
+from typing import Union
 
-def Generator(n=5, k=5, dict=True):
+def Generator(n: int = 10, k: int=5, return_list: bool=True) -> Union[list[list], pd.DataFrame]:
     '''
-    generate AOP questions and corresponding SQLite queries
+    generate AOP questions, AI answers, and context
     args
         n - number of question:query pairs to output, default 5
         k - # of results used for SQLite LIMIT statement, default 5
+        return_list - use false to return pd dataframe object
     returns
         data - dictionary {question:query} or 
             pandas dataframe, column 1 is the question and column 2 is the SQLite query
     '''
+    from utils.querying import AOP_query_chain
 
     generate_prompt = """ <instructions>
     You are an expert at adverse outcome pathways (AOP) and SQLite databases; you have familiarity with executing SQLite queries
-    over the AOP database. Now, imagine you are another  AOP expert interested in asking advanced, high level questions about the AOP database.
-    Your goal is to come up with {n} questions that an AOP database expert would have about the AOP database. Next, you should come up with a SQLite query on the AOP database to answer
-    the user's question using information about the AOP database. Do not write queries that select unnecessary data; use a LIMIT statement
-    to restrict your queries to the {top_k} results unless the questions implies otherwise. </instructions>
+    over the AOP database. Your goal is to come up with questions that a user might have about how the AOP database works, what it's purpose is,
+    and how to understand some of the complex data inside of it. Come up with a question according to the user's
+    skill level shown in the context, based on the schema of the AOP database. Your goal is solely to come up with 1 question,
+    and try to make it unique from the current questions shown in the context. </instructions>
 
     <example>
     Sample questions are as shown in: {examples}
     </example>
 
     <context>
-    AOP database dictionary: {aop_dict}
+    Skill-level: {skill_level}
+    AOP database schema dictionary: {aop_dict}
+    Current questions: {current_questions}
     </context>
 
     <formatting>
-    Output your answer only in the format of a python dictionary, where the dictionary key is the user question and the value of each
-    key is the corresponding SQLite query. Only respond with the dictionary in correct python syntax such that it can be directly
-    ran in code. Ensure all quotation marks are matched appropriately.
+    Output only the question based on the above context and instructions. Do not output any content other than
+    the question you are responding with.
     </formatting>
     """
 
-    # validate the python dictionary from generate_prompt is syntactically correct
-    check_prompt = """" <instructions>
-    You are a Python programming expert, particularly skilled at working with dictionaries. You will be passed a python3 dictionary
-    and your sole goal is to ensure that the dictionary is syntactically correct and valid python code. Ensure all strings are properly
-    enclosed within a set of matching quotation marks. Only make changes that are syntactically necessary.</instructions>
-    
-    <context> dictionary: {question_dict} </context>
-
-    <formatting> Return only the corrected Python dictionary. If the original dictionary is syntactically valid, return the
-    original dictionary. Do not respond with any text other than the Python dictionary: </formatting>
-    """
-    
     llm = BedrockChat(
             credentials_profile_name="default", model_id="anthropic.claude-3-sonnet-20240229-v1:0", verbose=True)
+    
+    chain = ChatPromptTemplate.from_template(generate_prompt) | llm | StrOutputParser()
 
+    skill_level= ["No AOP knowledge","Beginner level AOP knowledge", "Intermediate level AOP knowledge", "Expert level AOP knowledge"]
 
-    chain = ChatPromptTemplate.from_template(generate_prompt) | llm | RunnablePassthrough(question_dict=StrOutputParser()) | ChatPromptTemplate.from_template(check_prompt) | llm | StrOutputParser()
+    questions = []
+    contexts = []
+    responses = []
 
-    response = chain.invoke({
-        'aop_dict': AOP_Info,
-        'examples': Queries,
-        'n': n,
-        'top_k': k
-    })
+    for i in range(0, n):
+        question = chain.invoke({
+            'aop_dict': AOP_Info,
+            'examples': Queries,
+            'skill_level': skill_level[i % len(skill_level)],
+            'top_k': k,
+            'current_questions': questions
+        })
+        response = AOP_query_chain(question=question, chat_history="",stream=False)
+        questions.append(question)
+        responses.append(response)
+        contexts.append(AOP_query_chain.context)
 
-    # convert reponse string into a python dictionary
-    question_dict = literal_eval(response)
-    # return dictionary by default
-    if dict:
-        return question_dict
+    # return list of lists by default
+    result = []
+    for i in range(0, len(questions)):
+        result.append([questions[i], responses[i], contexts[i]])
+    if return_list:
+        return result
     # return dataframe
     else:
-        column_names = np.arange(0, len(question_dict.keys()))
-        for column in column_names:
-            column = 'Q' + str(column)
-
-        keys = list(question_dict.keys())[1::]
-        value_dict = list(question_dict.values())[1::]
-        values = []
-        df_dict = {}
-        for i in range(0, len(keys)):
-            index = value_dict[i]
-            value = index[0]
-            values.append(value)
-            df_dict[keys[i]] = value
-
-        data = pd.DataFrame()
-        data['Question'] = keys
-        data['Query'] = values
-        return data
+        return pd.DataFrame(result, columns=["Question", "AI_Response", "Context"])
 
 def Chat_Evaluator(question, chat_history):
     '''
@@ -186,22 +171,15 @@ def AOP_Query_Evaluator(question, query):
         'aop_dict': AOP_Info
     })
 
-def evaluator_chain(metrics):
+def cos_similarity(embedding_list: list):
     '''
-    rate the question:answer pair using various metrics (corresponding to various prompts)
-    args
-        metrics - list of available metrics calculations
-    '''
-
-def cos_similarity(embedding_list):
-    '''
-    perform cosine similarity calculation between two vectors (or lists)
+    perform cosine similarity calculation between two vectors (lists)
     '''
     embedding_model = BedrockEmbeddings(credentials_profile_name='default', model_id="amazon.titan-embed-text-v1")
     embedding1, embedding2 = embedding_model.embed_documents(embedding_list)
     return np.dot(embedding1, embedding2)/(norm(embedding1)*norm(embedding2))
 
-def f1_score(var_list):
+def f1_score(var_list: list):
     '''
     args
         var list must be [True Positives, False Positives, False Negatives]

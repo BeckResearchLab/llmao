@@ -2,13 +2,12 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 import sqlite3
 from langchain_community.chat_models import BedrockChat
-from utils.utils import AOP_Info, get_session, SQL_context_parser
+from utils.utils import AOP_Info, SQL_context_parser
+from utils.utils import get_session
 from eval.evaluator import Evaluator
 from langfuse.decorators import observe, langfuse_context
 from langchain_core.messages import AIMessage
 
-llm = BedrockChat(
-    credentials_profile_name="default", model_id="anthropic.claude-3-sonnet-20240229-v1:0", verbose=True)
 
 @observe(capture_input=False)
 def AOP_query_chain(question, chat_history, save_context=True, stream=True):
@@ -26,20 +25,26 @@ def AOP_query_chain(question, chat_history, save_context=True, stream=True):
     langfuse_handler = langfuse_context.get_current_langchain_handler()
     table_dict = AOP_route(question, chat_history)
 
+    llm = BedrockChat(
+        credentials_profile_name="default", model_id="anthropic.claude-3-sonnet-20240229-v1:0", verbose=True)
+
     # first, generate the SQL query based on the user's question
-    prompt1 = """ <instructions>
+    query_generator = """ <instructions>
     You are a SQLite expert. At the end of this query, you will be given a user question about the adverse outcome pathway (AOP)
     database. Your sole purpose is to find a SQL query to retrieve information from the AOP database which would answer the question.
     Your goal is not to execute the query or provide any information other than the SQLite query. Form the simplest query possible
     to answer the user question. The query SHOULD NOT for any reason mention Bedrock or us-east-1 region.
     Unless the user's question suggests otherwise, limit your response to the {top_k} results by using a LIMIT clause.
-    Address your response directly to the user.
     Use any or all of tables found in the keys of {table_dict} and only the columns found in the values of {table_dict}. </instructions> 
     
-    <example>
+    <example1>
     User Input: "Look up 2 chemicals in the AOP Database"
     Response: "Select ChemicalName, ChemicalInfo FROM chemical_info LIMIT 2;"
-    </example>
+    </example1>
+
+    <example2>
+
+    </example2>
 
     The user question which you are answering via SQLite query is: {question}
 
@@ -48,7 +53,7 @@ def AOP_query_chain(question, chat_history, save_context=True, stream=True):
     </formatting>
     """
 
-    chain = ChatPromptTemplate.from_template(prompt1) | llm | StrOutputParser()
+    chain = ChatPromptTemplate.from_template(query_generator) | llm | StrOutputParser()
 
     query = chain.invoke({
         'question': question,
@@ -63,6 +68,8 @@ def AOP_query_chain(question, chat_history, save_context=True, stream=True):
     try:
         cursor.execute(query)
         result = cursor.fetchall()
+    except sqlite3.ProgrammingError:
+        result = "The SQLite query was not valid, the AOP database could not be queried"
     except sqlite3.Error:
         checker_prompt = """ <instructions>
         You are an assisstant with deep expertise in SQLite and the Adverse Outcome Pathway database. A previous assistant was tasked
@@ -95,7 +102,8 @@ def AOP_query_chain(question, chat_history, save_context=True, stream=True):
             result = cursor.fetchall()
         except sqlite3.OperationalError:
             # implement some sort of error chain
-            error_response
+            result = "The SQLite query was not valid"
+            return failed_response(question, chat_history)
 
     cursor.close()
     sqliteConnection.close()
@@ -132,7 +140,6 @@ def AOP_query_chain(question, chat_history, save_context=True, stream=True):
 
     answer_chain = ChatPromptTemplate.from_template(aop_answer) | llm | StrOutputParser()    
     
-    # asynchronous invoke to send the user a response before calculating metric
     answer_stream = answer_chain.invoke({
             'question': question,
             'query': query,
@@ -141,8 +148,9 @@ def AOP_query_chain(question, chat_history, save_context=True, stream=True):
         })
 
     evaluator = Evaluator(metrics = ['faithfulness', 'answer_relevancy'], data=[question, answer_stream, context])
-    evaluator.evaluate()
+    #evaluator.evaluate()http://llm-ao.com/
     evaluator.trace_scores()
+    print(True)
     
     if stream:
         return answer_chain.stream({
@@ -157,7 +165,7 @@ def AOP_query_chain(question, chat_history, save_context=True, stream=True):
             'query': query,
             'result': result,
             'chat_history': chat_history
-        }, config={"callbacks": langfuse_handler})
+        })
 
 def AOP_route(question, chat_history):
     ''' The goal of this function is to take in a question about the AOP Database and use a LLM chain to determine which table(s) to use when answering
@@ -185,6 +193,8 @@ def AOP_route(question, chat_history):
     </formatting>
     """
 
+    llm = BedrockChat(credentials_profile_name="default", model_id="mistral.mistral-7b-instruct-v0:2", verbose=True)
+
     chain = ChatPromptTemplate.from_template(prompt) | llm | StrOutputParser()
 
     table_dict = chain.invoke({
@@ -194,14 +204,24 @@ def AOP_route(question, chat_history):
 
     return table_dict
 
-def error_response():
+def failed_response(question, chat_history, stream=True):
     prompt ='''
-    You are a helpful assistant and the user is having a problem. Try to cheer them up.
+    You are a helpful assisstant who is trying to help a user who asked a question about the
+    adverse outcome pathway database. Unfortunately, the user's question could not be answered
+    using the adverse outcome pathway database because the information could not be found.
+    Given the user context below, explain the situation to the current user and offer some alternatives.
+    If the chat history is none, do not mention the chat history.
+    
+    Context:
+    User question: {question}
+    Chat history: {chat_history}
     '''
+
+    llm = BedrockChat(credentials_profile_name="default", model_id="mistral.mistral-7b-instruct-v0:2", verbose=True)
 
     chain = ChatPromptTemplate.from_template(prompt) | llm | StrOutputParser()
 
-    return chain.stream()
-
-def AOP_wiki_chain(question, chat_history):
-    return
+    if stream:
+        return chain.stream({"question": question, "chat_history": chat_history})
+    else:
+        return chain.invoke({"question": question, "chat_history": chat_history})

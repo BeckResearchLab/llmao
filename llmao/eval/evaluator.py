@@ -2,11 +2,13 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_community.chat_models import BedrockChat
 import numpy as np
-from langchain_core.runnables import RunnablePassthrough
+import pandas as pd
 import eval.prompts
 from eval.tools import cos_similarity
 from ast import literal_eval
-from langfuse.decorators import observe, langfuse_context
+from langfuse.decorators import langfuse_context
+from typing import Optional, Union
+from pydantic import BaseModel, computed_field
 
 class Metric():
     
@@ -28,15 +30,13 @@ class Metric():
     def metric_info(self):
         return self.criteria, self.examples, self.scale
 
-
-class Evaluator():
+class Evaluator(BaseModel):
     '''
     Use specified metrics to score RAG questions (w/ or w/out ground-truth depending on metric)
     
     init params
         model - string for model_id, claude 3 default
         batch - whether to evaluate a pd dataframe of RAG question/answers
-        context - True if ground-truth / context provided for all questions
         metrics - list of metrics to use based on:
             precision: concisness + relevance
             correctness: 
@@ -46,37 +46,31 @@ class Evaluator():
         data - list of lists in format: ['human_question', 'ai_response', 'context', 'truth']
                 truth - optional ground truth required for 'correctness'
      '''
-
-    def __init__(self, metrics, data, model="anthropic.claude-3-sonnet-20240229-v1:0"):
-        self.model = model
-        self.metrics = metrics
-        self.data = data
     
+    metrics: list[str]
+    data: Union[list[list], list[str]]
+    output: Optional[str] = "dict"
+    model: Optional[str] = "anthropic.claude-3-sonnet-20240229-v1:0"
+
     def _get_data(self):
         return self.data
-
-    def _resolve_data(self):
-        dtype = str(type(self._get_data()))
-        if dtype == "<class 'dict'>":
-            return 'dict'
-        elif dtype == "<class 'pandas.core.frame.DataFrame'>" :
-            return 'database'
-        elif dtype == "<class 'list'>":
-            return 'list'
-        else:
-            raise ValueError("Data type " + dtype + ' is not a supported data format.')
     
     def _get_model(self):
         return self.model
     
     def _get_metrics(self):
         return self.metrics
+    
+    def _get_output(self):
+        return self.output
 
-    def data(self):
+    def _get_data(self):
         return self.data
+    
 
-    def evaluate(self):
-        data_list= self._resolve_data()
+    @computed_field
+    @property
+    def evaluate(self) -> dict:
         metrics = self._get_metrics()
         # set to a generic metric if none specified
         if metrics == 0:
@@ -137,33 +131,42 @@ class Evaluator():
                     evaluation = chain.invoke(input_dict)
                     scores[metric_name] = evaluation
 
-        self.results = scores
-        return
+        return scores
 
-    def load_scores(self):
-        '''
-        return each score (from 0-1) for each metric passed to init
-        '''
-        return self.results
-
-    def total_score(self):
-        '''
-        calculate the average score across all metrics used, returns float from 0-1
-        '''
-        score = []
-        for metric_name in self._get_metrics():
-            score.append(float(self.results[metric_name]))
-        self.total_score = np.average(score)
-        return self.total_score
+    def get_scores(self) -> dict:
+        if self._get_output() == "dict":
+            return self.evaluate
+        elif self._get_output() =='dataframe':
+            return pd.DataFrame(self.evaluate)
+        elif self._get_output() == 'list':
+            scores = pd.DataFrame(self.evaluate)
+            return scores.to_numpy().tolist()
+        else:
+            print("Invalid output type encountered")
     
+    @computed_field
+    @property
+    def average_score(self) -> float:
+        score = []
+        
+        for metric_name in self._get_metrics():
+            score.append(float((self.get_scores())[metric_name]))
+        
+        total = np.average(score)
+        return total
+    
+    def get_average_score(self) -> float:
+        return self.average_score
+
     def trace_scores(self):
         '''
         send scores to langfuse
         '''
         for metric in self._get_metrics():
+            print(self.get_scores())
             langfuse_context.score_current_trace(
                 name=metric,
-                value=self.results[metric]
+                value=self.get_scores()[metric]
             )
 
         return
