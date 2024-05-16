@@ -1,16 +1,17 @@
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
+from langchain_core.output_parsers import PydanticOutputParser
 from langchain_community.chat_models import BedrockChat
+from langchain_aws import Bedrock
 import numpy as np
 import pandas as pd
 import eval.prompts
-from eval.tools import cos_similarity
-from ast import literal_eval
+from eval.metrics import PARSER_DICT
 from langfuse.decorators import langfuse_context
 from typing import Optional, Union
 from pydantic import BaseModel, computed_field
+from langchain_core.exceptions import OutputParserException
 
-class Metric():
+class Metric_Handler():
     
     def __init__(self, metric):
         self.metric = metric
@@ -18,18 +19,19 @@ class Metric():
         if metric not in eval.prompts.METRICS_DICT:
             raise ValueError('Invalid metric given:' + str(metric) + ' is not a valid metric type. Please specify a valid metric type.')
         else:
-            criteria, examples, scale = eval.prompts.METRICS_DICT[metric]
-            self.criteria = criteria
-            self.examples = examples
-            self.scale = scale
+            self.prompt = eval.prompts.METRICS_DICT[metric]
         return
-
+    
     def _get_metric(self):
         return self.metric
     
-    def metric_info(self):
-        return self.criteria, self.examples, self.scale
+    def get_parser(self):    
 
+        return PydanticOutputParser(pydantic_object=PARSER_DICT[self.metric])
+    
+    def get_metric_prompt(self):
+        return self.prompt
+    
 class Evaluator(BaseModel):
     '''
     Use specified metrics to score RAG questions (w/ or w/out ground-truth depending on metric)
@@ -41,16 +43,18 @@ class Evaluator(BaseModel):
             precision: concisness + relevance
             correctness: 
             faithfulness (reference free): 
-            context_relevancy:
+            context_relevancy (reference free):
     		answer_relevancy (reference free):
         data - list of lists in format: ['human_question', 'ai_response', 'context', 'truth']
                 truth - optional ground truth required for 'correctness'
+        batch - 
      '''
     
-    metrics: list[str]
-    data: Union[list[list], list[str]]
+    metrics: list[str] = ["faithfulness", "answer_relevancy"]
+    data: list[list]
     output: Optional[str] = "dict"
     model: Optional[str] = "anthropic.claude-3-sonnet-20240229-v1:0"
+    batch: Optional[bool] = False
 
     def _get_data(self):
         return self.data
@@ -67,106 +71,76 @@ class Evaluator(BaseModel):
     def _get_data(self):
         return self.data
     
-
     @computed_field
     @property
-    def evaluate(self) -> dict:
+    def _evaluate(self) -> dict:
         metrics = self._get_metrics()
-        # set to a generic metric if none specified
-        if metrics == 0:
-            metrics = ['precision']
-        else:
-            pass
+        print(self._get_data())
+        model = "anthropic.claude-3-haiku-20240307-v1:0"
+        llm = BedrockChat(credentials_profile_name="default", model_id=model, verbose=True)
+        #llm = Bedrock(credentials_profile_name="default", model_id="mistral.mixtral-8x7b-instruct-v0:1", verbose=True)
+        # llm = Bedrock(credentials_profile_name="default", model_id=self._get_model(), verbose=True)
 
-        llm = BedrockChat(
-             credentials_profile_name="default", model_id=self._get_model(), verbose=True)
+        if self.batch:
+            scores_list = []
 
-        scores = {}
-        # calculate a score for each metric
-        for metric_name in metrics:
-            # initialize metric object
-            metric = Metric(metric_name)
-            criteria, examples, formatting = metric.metric_info()
-            prompt = eval.prompts.GENERAL_PROMPT
-            chain = ChatPromptTemplate.from_template(prompt) | llm | StrOutputParser()
-        
-            for data_list in self._get_data():
-                input_dict = {
-                        'criteria': criteria,
-                        'examples': examples,
-                        'formatting': formatting,
+        # iterate through each entry of question, answer, context for each passed metric
+        for data_list in self._get_data():
+            print(data_list)
+            input_dict = {
                         'question': data_list[0],
                         'response': data_list[1],
                         'context': data_list[2]
-                    }
-                # correctness requires additional calculations
-                if metric_name == 'correctness':
-                    semantic_similarity = cos_similarity([data_list[2], data_list[3]])
-                    # for correctness, output will be "[TP, FP, FN]""
-                    input_dict['truth'] = data_list[3]
-                    evaluation = chain.invoke(input_dict)
-                    f1_score = literal_eval(evaluation)
-                    scores[metric_name] = (f1_score + semantic_similarity) / 2
-                elif metric_name == 'context_relevancy':
-                    # score using (# of relevant sentences in response)/(Total # of sentences)
-                    evaluation = literal_eval(chain.invoke(input_dict))
-                    scores[metric_name] = evaluation[0]/evaluation[1]
-                elif metric_name == 'answer_relevancy':
-                    # answer relevancy prompt will return default 3 questions:
-                    evaluation = literal_eval(chain.invoke(input_dict))
-                    relevancy = []
-                    for q in evaluation:
-                        # cosine similarity between original question, artificial questions
-                        relevancy.append(cos_similarity([data_list[0], q]))
-                    scores[metric_name] = sum(relevancy) / len(relevancy)
-                elif metric_name == 'faithfulness':
-                    # evaluation = [A, B]
-                    evaluation = literal_eval(chain.invoke(input_dict))
-                    try:
-                        scores[metric_name] = evaluation[1] / evaluation[0]
-                    # try again
-                    except ZeroDivisionError:
-                        evaluation = literal_eval(chain.invoke(input_dict))
-                else:
-                    evaluation = chain.invoke(input_dict)
-                    scores[metric_name] = evaluation
+                        }
 
-        return scores
+            scores = {} # define score for each entry
+
+            for metric_name in self._get_metrics():
+                print(metric_name)
+                # initialize metric_handler object
+                metric = Metric_Handler(metric_name)
+                prompt = metric.get_metric_prompt()
+                # get output parser based on the metric type
+                parser = metric.get_parser()
+                prompt_template = PromptTemplate(template=prompt,
+                                                input_variables=list(input_dict.keys()),
+                                                partial_variables={"format_instructions": parser.get_format_instructions()})
+                
+                # invoking this chain will generate a metric object
+                chain = prompt_template | llm | parser
+
+                try:
+                    metric_object = chain.invoke(input_dict)
+                except OutputParserException:
+                    metric_object = chain.invoke(input_dict)
+
+                if metric_name == 'answer_relevancy':
+                  metric_object.user_question = input_dict['question']
+                # fix this
+                elif metric_name == 'correctness':
+                    metric_object.calculate(input_dict['question'], input_dict["truth"])
+                scores[metric_name] = metric_object.score
+                if self.batch:
+                    scores_list.append(scores)
+        if self.batch:
+            return scores_list
+        else:
+            return scores
 
     def get_scores(self) -> dict:
-        if self._get_output() == "dict":
-            return self.evaluate
-        elif self._get_output() =='dataframe':
-            return pd.DataFrame(self.evaluate)
-        elif self._get_output() == 'list':
-            scores = pd.DataFrame(self.evaluate)
-            return scores.to_numpy().tolist()
-        else:
-            print("Invalid output type encountered")
-    
-    @computed_field
-    @property
-    def average_score(self) -> float:
-        score = []
-        
-        for metric_name in self._get_metrics():
-            score.append(float((self.get_scores())[metric_name]))
-        
-        total = np.average(score)
-        return total
-    
-    def get_average_score(self) -> float:
-        return self.average_score
+        return self._evaluate
 
     def trace_scores(self):
         '''
         send scores to langfuse
         '''
-        for metric in self._get_metrics():
-            print(self.get_scores())
+        metrics = self._get_metrics()
+        scores = self.get_scores()
+        for i in range(0, len(self._get_metrics())):
+            metric = metrics[i]
+            score = scores[metric]
             langfuse_context.score_current_trace(
                 name=metric,
-                value=self.get_scores()[metric]
+                value=score
             )
-
         return

@@ -15,8 +15,8 @@ from langfuse.decorators import observe
 langfuse = Langfuse()
 langfuse.auth_check()
 
-#llm = BedrockChat(credentials_profile_name="default", model_id="anthropic.claude-3-sonnet-20240229-v1:0", verbose=True)
-llm = BedrockChat(credentials_profile_name="default", model_id="mistral.mixtral-8x7b-instruct-v0:1", verbose=True)
+llm = BedrockChat(credentials_profile_name="default", model_id="anthropic.claude-3-sonnet-20240229-v1:0", verbose=True)
+#llm = BedrockChat(credentials_profile_name="default", model_id="mistral.mixtral-8x7b-instruct-v0:1", verbose=True)
 
 # page configuration
 st.set_page_config(
@@ -67,9 +67,7 @@ def route(human_question, chat_history):
     path = (route_chain.invoke({
         "question": human_question,
         "aop_dict": AOP_Info
-    }))[1:]
-
-    print(path)
+    }))
 
     if chat_history is not None:
         Chat_Evaluator(human_question, chat_history)
@@ -78,12 +76,10 @@ def route(human_question, chat_history):
 
     # if aop database is needed to answer the question
     if str(path[0]) == 'd':
-        print(True)
         # enter sql chain
         return AOP_query_chain(human_question, chat_history)
     # if a database is not needed to answer the question, answer normally
     else:
-        print(False)
         # generic template
         template = """ <instructions>
         You are a friendly, cheerful, and helpful assistant. 

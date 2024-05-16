@@ -48,12 +48,15 @@ def get_session():
     '''
     get user session id
     '''
-    runtime = get_instance()
-    session_id = get_script_run_ctx().session_id
-    session_info = runtime._session_mgr.get_session_info(session_id)
-    if session_info is None:
-        raise RuntimeError("Couldn't get your Streamlit Session object.")
-    return str(session_info.session)
+    try:
+        runtime = get_instance()
+        session_id = get_script_run_ctx().session_id
+        session_info = runtime._session_mgr.get_session_info(session_id)
+        if session_info is None:
+            raise RuntimeError("Couldn't get your Streamlit Session object.")
+        return str(session_info.session)
+    except RuntimeError:
+        pass
 
 langfuse_handler = CallbackHandler(
     public_key=st.secrets['public_key'],

@@ -22,7 +22,10 @@ def AOP_query_chain(question, chat_history, save_context=True, stream=True):
     '''
     langfuse_context.update_current_trace(name = "AOP_DB_RAG", session_id=get_session())
     langfuse_context.update_current_observation(name="retrieval", session_id=get_session(), input=question)
-    langfuse_handler = langfuse_context.get_current_langchain_handler()
+    try:
+        langfuse_handler = langfuse_context.get_current_langchain_handler()
+    except IndexError:
+        pass
     table_dict = AOP_route(question, chat_history)
 
     llm = BedrockChat(
@@ -109,6 +112,7 @@ def AOP_query_chain(question, chat_history, save_context=True, stream=True):
     sqliteConnection.close()
 
     if save_context:
+        # transform the SQL query + result into full sentence context
         context = SQL_context_parser(llm, query=query, query_results=result)
         langfuse_context.update_current_observation(
             name='aop_db_retrieval',
@@ -147,10 +151,8 @@ def AOP_query_chain(question, chat_history, save_context=True, stream=True):
             'chat_history': chat_history
         })
 
-    evaluator = Evaluator(metrics = ['faithfulness', 'answer_relevancy'], data=[question, answer_stream, context])
-    #evaluator.evaluate()http://llm-ao.com/
+    evaluator = Evaluator(metrics = ['faithfulness', 'answer_relevancy'], data=[[question, answer_stream, context]])
     evaluator.trace_scores()
-    print(True)
     
     if stream:
         return answer_chain.stream({
@@ -216,8 +218,10 @@ def failed_response(question, chat_history, stream=True):
     User question: {question}
     Chat history: {chat_history}
     '''
-
-    llm = BedrockChat(credentials_profile_name="default", model_id="mistral.mistral-7b-instruct-v0:2", verbose=True)
+    
+    llm = BedrockChat(
+        credentials_profile_name="default", model_id="anthropic.claude-3-sonnet-20240229-v1:0", verbose=True)
+    #llm = BedrockChat(credentials_profile_name="default", model_id="mistral.mistral-7b-instruct-v0:2", verbose=True)
 
     chain = ChatPromptTemplate.from_template(prompt) | llm | StrOutputParser()
 

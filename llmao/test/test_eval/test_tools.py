@@ -13,7 +13,7 @@ def test_Generator():
 def test_cos_similarity():
     # 2 strings should have a cosine similarity of 1 if they are the same
     assert np.isclose(cos_similarity(["Hello", "Hello"]), 1)
-    assert isinstance(cos_similarity(["Hello", "Hello"], float))
+    assert isinstance(cos_similarity(["Hello", "Hello"]), float)
     with pytest.raises(Exception):
         cos_similarity(1, "str"),
         cos_similarity([1, 1])

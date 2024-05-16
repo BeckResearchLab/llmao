@@ -9,11 +9,10 @@ sample_data = sample_data.to_numpy().tolist()
 
 # test case where evaluator object successfully initialized
 def test_init_eval_pass():
-    evaluator = Evaluator(data = sample_data, metrics = ["faithfulness", "answer_relevancy"])
+    evaluator = Evaluator(data = sample_data, metrics = ["faithfulness", "answer_relevancy"], batch=True)
     assert evaluator.metrics == ["faithfulness", "answer_relevancy"]
     assert evaluator.data == sample_data
-    assert isinstance(evaluator.get_scores(), dict)
-    assert isinstance(evaluator.get_average_score(), float)
+    assert isinstance(evaluator.get_scores(), list)
 
 # invalid evaluator initialization
 def test_init_eval_edge_cases():
