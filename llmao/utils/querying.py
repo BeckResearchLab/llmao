@@ -162,12 +162,12 @@ def AOP_query_chain(question, chat_history, save_context=True, stream=True):
             'chat_history': chat_history
         }, config={"callbacks": [langfuse_handler]})
     else:
-        return answer_chain.invoke({
+        return [answer_chain.invoke({
             'question': question,
             'query': query,
             'result': result,
             'chat_history': chat_history
-        })
+            }), context]
 
 def AOP_route(question, chat_history):
     ''' The goal of this function is to take in a question about the AOP Database and use a LLM chain to determine which table(s) to use when answering

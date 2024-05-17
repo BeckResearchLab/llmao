@@ -1,6 +1,12 @@
-from pydantic import BaseModel, Field, field_validator, computed_field
+from pydantic import BaseModel, Field, computed_field
 from eval.tools import f1_score, cos_similarity
 from typing import Union
+
+"""
+Classes in this file are intended for use only as input to PydanticOutputParser.
+Each class can return their computed score by using <instance>.score
+"""
+
 
 class Faithfulness(BaseModel):
     """
@@ -21,20 +27,34 @@ class Correctness(BaseModel):
     TP: int = Field(description="Facts or statements that are present in both the ground truth and the ai answer")
     FP: int = Field(description="Facts or statements that are present in the ai answer but not in the ground truth")
     FN: int = Field(description="Facts or statements that are present in the ground truth but not in the ai answer")
-    score: None
+    ai_response: Union[str, None]
+    true_answer: Union[str, None]
 
     def _get_f1(self) -> float:
         return f1_score(self.TP, self.FP, self.FN)
 
-    # will not be added to the schema
+    # set human question dynamically
     @property
+    def ai_response(self) -> str:
+        return self.ai_response
+
+    @ai_response.setter
+    def ai_response(self, ai_response: str) -> str:
+        self.user_question = ai_response
+        self.score()
+
+    @property
+    def true_answer(self) -> str:
+        return self.true_answer
+
+    @true_answer.setter
+    def true_answer(self, true_answer: str) -> str:
+        self.true_answer = true_answer
+
+    @computed_field
     def score(self) -> float:
-        return self._score
-    
-    def calculate(self, ai_answer, ground_truth) -> float:
-        semantic_similarity = cos_similarity([ai_answer, ground_truth])
-        self._score = (semantic_similarity + self._get_f1()) / 2 
-        return
+        semantic_similarity = cos_similarity([self.ai_response, self.true_answer])
+        return (semantic_similarity + self._get_f1()) / 2 
     
 class Precision(BaseModel):
     precision: float=Field(description="""0 - a imprecise answer, where none of the information in the response is relevant or necessary to answer the user's question
@@ -56,7 +76,7 @@ class Answer_Relevancy(BaseModel):
     @user_question.setter
     def user_question(self, user_question: str) -> str:
         self.user_question = user_question
-        self.score()
+        #self.score()
 
     @computed_field
     def score(self) -> float:

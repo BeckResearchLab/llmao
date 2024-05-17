@@ -64,10 +64,10 @@ def Generator(n: int = 10, k: int=5, return_list: bool=True) -> Union[list[list]
             'top_k': k,
             'current_questions': questions
         })
-        response = AOP_query_chain(question=question, chat_history="",stream=False)
+        response, context = AOP_query_chain(question=question, chat_history="",stream=False)
         questions.append(question)
         responses.append(response)
-        contexts.append(AOP_query_chain.context)
+        contexts.append(context)
 
     # return list of lists by default
     result = []

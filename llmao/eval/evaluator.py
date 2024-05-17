@@ -1,18 +1,17 @@
-from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
+from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_community.chat_models import BedrockChat
-from langchain_aws import Bedrock
-import numpy as np
-import pandas as pd
 import eval.prompts
 from eval.metrics import PARSER_DICT
 from langfuse.decorators import langfuse_context
-from typing import Optional, Union
+from typing import Optional
 from pydantic import BaseModel, computed_field
 from langchain_core.exceptions import OutputParserException
 
-class Metric_Handler():
-    
+class _Metric_Handler():
+    '''
+    Handler class maps user input (metric name) to a LLMao metric object using the PARSER_DICT
+    '''
     def __init__(self, metric):
         self.metric = metric
         # verify the kind of metric passed is valid
@@ -26,7 +25,6 @@ class Metric_Handler():
         return self.metric
     
     def get_parser(self):    
-
         return PydanticOutputParser(pydantic_object=PARSER_DICT[self.metric])
     
     def get_metric_prompt(self):
@@ -74,8 +72,7 @@ class Evaluator(BaseModel):
     @computed_field
     @property
     def _evaluate(self) -> dict:
-        metrics = self._get_metrics()
-        print(self._get_data())
+        #metrics = self._get_metrics()
         model = "anthropic.claude-3-haiku-20240307-v1:0"
         llm = BedrockChat(credentials_profile_name="default", model_id=model, verbose=True)
         #llm = Bedrock(credentials_profile_name="default", model_id="mistral.mixtral-8x7b-instruct-v0:1", verbose=True)
@@ -86,7 +83,6 @@ class Evaluator(BaseModel):
 
         # iterate through each entry of question, answer, context for each passed metric
         for data_list in self._get_data():
-            print(data_list)
             input_dict = {
                         'question': data_list[0],
                         'response': data_list[1],
@@ -96,9 +92,8 @@ class Evaluator(BaseModel):
             scores = {} # define score for each entry
 
             for metric_name in self._get_metrics():
-                print(metric_name)
-                # initialize metric_handler object
-                metric = Metric_Handler(metric_name)
+                # initialize _Metric_Handler object
+                metric = _Metric_Handler(metric_name)
                 prompt = metric.get_metric_prompt()
                 # get output parser based on the metric type
                 parser = metric.get_parser()
@@ -116,12 +111,14 @@ class Evaluator(BaseModel):
 
                 if metric_name == 'answer_relevancy':
                   metric_object.user_question = input_dict['question']
-                # fix this
                 elif metric_name == 'correctness':
-                    metric_object.calculate(input_dict['question'], input_dict["truth"])
+                    metric_object.ai_response = input_dict['response']
+                    metric_object.true_answer = input_dict['truth']
                 scores[metric_name] = metric_object.score
+                
                 if self.batch:
                     scores_list.append(scores)
+                    
         if self.batch:
             return scores_list
         else:
