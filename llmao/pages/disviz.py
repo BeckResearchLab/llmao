@@ -28,7 +28,7 @@ import matplotlib.patches as mpatches
 #st.header("Disease & Adverse Outcome Pathway Visualization")
 
 # MongoDB connection
-connect_string = st.secrets['connect_string'],
+connect_string = st.secrets['connect_string']
 client = MongoClient(connect_string)
 db = client["aop_wiki"]
 key_event = db['key-event']
