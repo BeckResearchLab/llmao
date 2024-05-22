@@ -16,10 +16,10 @@ st.info("An Adverse Outcome Pathway (AOP) is a model that identifies a sequence 
 
 #write
 st.write("In very simple terms, one can think of an AOP like a domino effect - Chemical exposure leads to a biological change within a cell, and then a molecular initiating event (e.g., chemical binding to DNA) triggers more dominos to fall in a cascade of sequential key events (e.g., abnormal cell replication) along toxicity pathway.")
-st.image("/home/ubuntu/llmao/docs/AOP-chain diag.png")
+st.image("../docs/AOP-chain diag.png")
 
 st.write("Alkylation of DNA(Deoxyribonucleic Acid) as molecule intiating event followed by key events of inadequate DNA repair and increase mutations leading adverse outcome with increased risk of cancer. ")
-st.image("/home/ubuntu/llmao/docs/AOP-cancer.png")
+st.image("../docs/AOP-cancer.png")
 
 #SubPart 1
 st.markdown("### Who uses AOP's?")

@@ -64,7 +64,7 @@ def AOP_query_chain(question, chat_history, save_context=True, stream=True):
         'table_dict': table_dict
     })
 
-    db_name = '//home/ubuntu/llmao/llmao/aopdb_08-25-2020.db'
+    db_name = '../aopdb_08-25-2020.db'
     sqliteConnection = sqlite3.connect(db_name)
     cursor = sqliteConnection.cursor()
 
