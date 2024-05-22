@@ -6,7 +6,7 @@ st.title("What are Adverse Outcome Pathway?")
 
 #Header
 
-st.header("Lets learn about Adverse Outcome Pathway")
+#st.header("Lets learn about Adverse Outcome Pathway")
 
 #sub header
 st.subheader("Adverse Outcome Pathway(AOP)")
@@ -14,15 +14,12 @@ st.subheader("Adverse Outcome Pathway(AOP)")
 #giving information to user
 st.info("An Adverse Outcome Pathway (AOP) is a model that identifies a sequence of molecular and cellular events that may lead to adverse health effects in individuals and populations.An AOP maps out a sequence of biological events following an exposure that may result in illness or injury.")
 
-#Warning Usage
-#st.warning("Be careful in using AOP")\
-
 #write
 st.write("In very simple terms, one can think of an AOP like a domino effect - Chemical exposure leads to a biological change within a cell, and then a molecular initiating event (e.g., chemical binding to DNA) triggers more dominos to fall in a cascade of sequential key events (e.g., abnormal cell replication) along toxicity pathway.")
-st.image("AOP-chain diag.png")
+st.image("/home/ubuntu/llmao/docs/AOP-chain diag.png")
 
 st.write("Alkylation of DNA(Deoxyribonucleic Acid) as molecule intiating event followed by key events of inadequate DNA repair and increase mutations leading adverse outcome with increased risk of cancer. ")
-st.image("AOP-cancer.png")
+st.image("/home/ubuntu/llmao/docs/AOP-cancer.png")
 
 #SubPart 1
 st.markdown("### Who uses AOP's?")
