@@ -26,7 +26,7 @@ info_query = """
     """
 
 # connect to db, execute query, and close connection
-db_name = '//home/ubuntu/llmao/llmao/aopdb_08-25-2020.db'
+db_name = './aopdb_08-25-2020.db'
 sqliteConnection = sqlite3.connect(db_name)
 cursor = sqliteConnection.cursor()
 cursor.execute(info_query)

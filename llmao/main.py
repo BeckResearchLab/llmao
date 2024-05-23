@@ -5,8 +5,8 @@ add_page_title()
 
 show_pages(
     [
-        Page("/home/ubuntu/llmao/llmao/pages/app.py", "LLMao", "💊"),
-        Page("/home/ubuntu/llmao/llmao/pages/about.py", "About", ":books:"),
+        Page("./pages/app.py", "LLMao", "💊"),
+        Page("./pages/about.py", "About", ":books:"),
         Page("/home/ubuntu/llmao/llmao/pages/disviz.py", "DisViz", "👁️")
     ]
 )
