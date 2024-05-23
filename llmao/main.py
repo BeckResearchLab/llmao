@@ -7,5 +7,6 @@ show_pages(
     [
         Page("./pages/app.py", "LLMao", "💊"),
         Page("./pages/about.py", "About", ":books:"),
+        Page("/home/ubuntu/llmao/llmao/pages/disviz.py", "DisViz", "👁️")
     ]
 )
