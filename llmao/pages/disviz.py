@@ -43,6 +43,11 @@ def get_available_aos():
     aos = key_event.find({"biological-organization-level": "Individual"}, {"title": 1, "_id": 0})
     return [ao["title"] for ao in aos]
 
+# Function to get available KEs from the database
+def get_available_kes():
+    kes = key_event.find({"biological-organization-level": {"$in": ["Cellular", "Tissue", "Organ"]}}, {"title": 1, "_id": 0})
+    return [ke["title"] for ke in kes]
+
 # Function to wrap text for labels
 def wrap_label(text, width):
     return fill(text, width)
@@ -50,21 +55,30 @@ def wrap_label(text, width):
 # Streamlit UI
 st.title("Adverse Outcome Pathway Diagram Generator")
 
-# Get available MIEs and AOs
+# Get available MIEs, KEs, and AOs
 available_mies = get_available_mies()
+available_kes = get_available_kes()
 available_aos = get_available_aos()
 
 # Searchable MIE input
 mie_title = st.selectbox("Select or search for a Molecular Initiating Event (MIE):", available_mies)
 
-# Text inputs for Key Events and searchable AO input
-ke_titles = st.text_area("Enter Key Events (KEs) separated by commas:", "Inadequate DNA repair, Increase, Mutations, Increase Chromosomal Aberrations, Increased microRNA expression, Decreased SIRT1 expression, Increased activation, Nuclear factor kappa B (NF-kB), Antagonism, Estrogen receptor, Epithelial Mesenchymal Transition (EMT)")
+# Allow the user to specify the number of KEs
+num_kes = st.number_input("How many Key Events (KEs) do you want to add?", min_value=1, max_value=10, value=5)
+
+# Searchable KE inputs
+ke_titles = []
+for i in range(num_kes):
+    ke_title = st.selectbox(f"Select or search for Key Event (KE) {i+1}:", available_kes, key=f"ke_{i}")
+    ke_titles.append(ke_title)
+
+# Searchable AO input
 ao_title = st.selectbox("Select or search for an Adverse Outcome (AO):", available_aos)
 
 # Button to generate the diagram
 if st.button("Generate Diagram"):
     # Process input
-    ke_titles = [ke.strip() for ke in ke_titles.split(',')]
+    ke_titles = [ke.strip() for ke in ke_titles]
 
     # Initialize the graph
     G = nx.DiGraph()
@@ -90,34 +104,37 @@ if st.button("Generate Diagram"):
     # Wrap text for labels
     labels = {node: wrap_label(G.nodes[node]['title'], 25) for node in G.nodes}
 
-    # Position the nodes vertically
+    # Position the nodes vertically with dynamic spacing
     pos = {}
     row = 0
+    spacing = 4  # Fixed spacing between nodes
     for i, node in enumerate([MIE_id] + KE_ids + [AO_id]):
         pos[node] = (0, -row)
-        row += 2
+        row += spacing
 
     color_map = {'MIE': 'green', 'KE': 'orange', 'AO': 'red'}
     node_colors = [color_map[G.nodes[node]['type']] for node in G.nodes]
 
-    plt.figure(figsize=(8, 15))
+    # Dynamically adjust the figure size based on the number of key events
+    fig_height = 3 + num_kes * 2
+    plt.figure(figsize=(8, fig_height))
 
-    # Increase node size
-    node_size = 3000
+    # Increase node size and spacing
+    node_size = 5000
 
     # Draw larger white nodes for arrow gaps
-    nx.draw_networkx_nodes(G, pos, node_color='white', node_size=node_size * 1.25, alpha=1, node_shape='s')
+    nx.draw_networkx_nodes(G, pos, node_color='white', node_size=node_size * 1.5, alpha=1, node_shape='s')
 
     # Draw colored nodes
     nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=node_size, edgecolors='black', alpha=0.9, node_shape='s')
 
     # Draw edges with larger arrows
-    nx.draw_networkx_edges(G, pos, edgelist=G.edges, node_size=node_size * 1.25, arrowstyle='->', arrowsize=15, width=2, edge_color='gray')
+    nx.draw_networkx_edges(G, pos, edgelist=G.edges, node_size=node_size * 1.5, arrowstyle='->', arrowsize=20, width=2, edge_color='gray')
 
     # Draw labels
     for node, (x, y) in pos.items():
         plt.text(x, y, labels[node], horizontalalignment='center', verticalalignment='center',
-                 bbox=dict(facecolor='white', edgecolor='black', boxstyle='round,pad=0.3'), fontsize=10)
+                 bbox=dict(facecolor='white', edgecolor='black', boxstyle='round,pad=0.5'), fontsize=10)
 
     # Adding a legend
     green_patch = mpatches.Patch(color='green', label='Molecular Initiating Event (MIE)')
@@ -125,6 +142,6 @@ if st.button("Generate Diagram"):
     red_patch = mpatches.Patch(color='red', label='Adverse Outcome (AO)')
     plt.legend(handles=[green_patch, orange_patch, red_patch], loc='upper right', bbox_to_anchor=(1.2, 1))
 
-    plt.title("Adverse Outcome Pathway Diagram for DNA damage and mutations leading to Metastatic Breast Cancer")
+    plt.title("Adverse Outcome Pathway Diagram")
     plt.axis('off')
     st.pyplot(plt)
