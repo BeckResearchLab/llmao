@@ -3,6 +3,8 @@ import streamlit as st
 #title- Used to add title of app
 
 st.title("What are Adverse Outcome Pathway?")
+# with st.sidebar:
+st.logo("/home/ubuntu/llmao/docs/logo.png")
 
 #Header
 
@@ -30,7 +32,7 @@ st.write("The adverse outcome pathway database (AOP-DB) is an online database th
 st.markdown("### Why AOP?")
 st.markdown(":face_with_raised_eyebrow:")
 st.info("An AOP maps out how a stressor (e.g. chemical) interacts within an organism to cause adverse effects. If the amount of the chemical is sufficient, then cells can be affected, which can then affect tissues (which are collections of cells), organs (which are collections of tissues), and, ultimately, the health of the organism or even the population as a whole.")
-st.write("By understanding the individual key events, one can better understand what the health outcome will be. Information used to develop AOPs can come from in vitro assays, animal studies, and computational models. AOPs allow scientists to connect the in vitro results generated from rapid screening protocols to actual adverse outcomes.**")
+st.write("By understanding the individual k/home/ubuntu/llmao/llmao/pages/app.pyey events, one can better understand what the health outcome will be. Information used to develop AOPs can come from in vitro assays, animal studies, and computational models. AOPs allow scientists to connect the in vitro results generated from rapid screening protocols to actual adverse outcomes.**")
 
 #Subpart 2
 st.markdown("### How to query AOP database in llm-ao?")

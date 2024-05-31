@@ -24,10 +24,13 @@ st.set_page_config(
     page_icon='🧬',
     layout='wide',
     menu_items={
-        'About': '#This is a header.'
+        'About': 'https://github.com/BeckResearchLab/llmao'
     })
 
 st.title('LLMao: AI-Toxicology Expert🧪🧬')
+
+with st.sidebar:
+  st.image("/home/ubuntu/llmao/docs/logo.png", width=150, use_column_width="always")
 
 # initialize chat history
 if 'chat_history' not in st.session_state:

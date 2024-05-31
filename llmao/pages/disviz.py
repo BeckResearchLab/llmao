@@ -12,6 +12,10 @@ import pandas as pd
 import time
 from pymongo.errors import ServerSelectionTimeoutError
 
+
+# with st.sidebar:
+st.logo("/home/ubuntu/llmao/docs/logo.png")
+
 connect_string = st.secrets['connect_string']
 
 # Disable SSL warnings# Disable SSL warnings
