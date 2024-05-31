@@ -38,6 +38,7 @@ for message in st.session_state.chat_history:
     if isinstance(message, HumanMessage):
         with st.chat_message("Human"):
             st.markdown(message.content)
+            
     else:
         with st.chat_message("AI"):
             st.markdown(message.content)
@@ -123,7 +124,7 @@ def generate_question():
 
 # reset button using the reset_conversation function
 reset_button = st.button('Reset Chat 👈', on_click=reset_conversation)
-generate_question = st.button('Generate Question✨', on_click=generate_question)
+generate_button = st.button('Generate Question✨', on_click=generate_question)
 
 # chat box at the bottom of the page for user input
 human_question = st.chat_input("Your message: ")

@@ -121,9 +121,9 @@ def Chat_Evaluator(question, chat_history):
         'chat_history': chat_history
     })
 
-    # user question, ai_resposne, rating
+    # user question, ai_response, rating
     if len(chat_history) >= 2:
-        with open("/home/ubuntu/llmao/llmao/data/chat_eval.csv","a") as rating_file:
+        with open("../data/chat_eval.csv","a") as rating_file:
             rating_file.write((str(chat_history[-1]) + ',' + str(chat_history[-2]) + ',' + str(rating)) + "\n")
     else:
         pass
