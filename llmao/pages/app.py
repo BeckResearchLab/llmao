@@ -3,7 +3,7 @@ from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from utils.querying import AOP_query_chain
+from utils.AOP_db_query import AOP_query_chain
 from utils.utils import Questions, AOP_Info, langfuse_handler
 from eval.tools import Chat_Evaluator
 from eval.evaluator import Evaluator
