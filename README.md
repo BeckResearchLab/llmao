@@ -38,7 +38,7 @@ Many of these LLMs have been trained on a massive amount of data. While many LLM
 
 Our group envisions to build a bridge between scientists (e.g., biologists and toxicologists) and the general population. Instead of searching through resources with confusing graphics to find out more about toxicology, we are hoping that they can turn to this specialized LLM that has access to a large number of textbooks, papers, journals, etc, and get the insightful, accurate, and concise information within a matter of seconds. 
 
-## How this is being accomplished
+## How this is being accomplished? 
 
 To perform retrieval augmented generation (RAG) with the adverse outcome pathway (AOP) database, we are following the steps outlined in the figure below.
 
