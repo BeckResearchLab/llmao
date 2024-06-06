@@ -6,7 +6,9 @@
 
 **LLMao** is a data science graduate capstone project from the Chemical Engineering department at the University of Washington. 
 
-**Goal of LLMao: Develop a large language model (LLM) that can perform retrieval augmented generation (RAG) with the adverse outcome pathway (AOP) database from the Environmental Protection Agency (EPA).**
+**Goal of LLMao**: Develop a large language model (LLM) that can perform retrieval augmented generation (RAG) with the adverse outcome pathway (AOP) database from the Environmental Protection Agency (EPA).
+
+Access the webpage: http://llm-ao.com
 
 ## Quickstart
 
